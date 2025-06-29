@@ -1,5 +1,11 @@
 package chess;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+
+import static java.lang.Math.abs;
 /**
  * A chessboard that can hold and rearrange chess pieces.
  * <p>
@@ -7,11 +13,21 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessBoard {
+    private ChessPosition CapturedPosition = null;
 
+    ChessPiece[][] squares;
     public ChessBoard() {
-        
+        squares =  new ChessPiece[8][8]; //创建8x8棋盘方块
     }
-
+    public ChessPiece doMove(ChessMove move) {
+        ChessPiece piece;
+        ChessPiece capturedPiece = getPiece(move.getEndPosition());
+        capturedPosition = move.getEndPosition();
+        if (move.getPromotionPiece() != null) {
+            piece = new ChessPiece(this.getPiece(move.getStartPosition()).getTeamColor(), move.getPromotionPiece());
+        } else {
+            piece = this.getPiece(move.getStartPosition());
+        }
     /**
      * Adds a chess piece to the chessboard
      *
@@ -19,7 +35,8 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        throw new RuntimeException("Not implemented");
+
+
     }
 
     /**
