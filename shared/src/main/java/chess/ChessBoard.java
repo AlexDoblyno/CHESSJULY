@@ -15,18 +15,14 @@ import static java.lang.Math.abs;
 public class ChessBoard {
     private ChessPosition CapturedPosition = null;
 
-    ChessPiece[][] squares;
+    ChessPiece[][] GameBoard;
     public ChessBoard() {
-        squares =  new ChessPiece[8][8]; //创建8x8棋盘方块
+        GameBoard =  new ChessPiece[8][8]; //创建8x8棋盘方块
     }
+
+
     public ChessPiece doMove(ChessMove move) {
-        ChessPiece piece;
-        ChessPiece capturedPiece = getPiece(move.getEndPosition());
-        capturedPosition = move.getEndPosition();
-        if (move.getPromotionPiece() != null) {
-            piece = new ChessPiece(this.getPiece(move.getStartPosition()).getTeamColor(), move.getPromotionPiece());
-        } else {
-            piece = this.getPiece(move.getStartPosition());
+
         }
     /**
      * Adds a chess piece to the chessboard
@@ -34,10 +30,11 @@ public class ChessBoard {
      * @param position where to add the piece to
      * @param piece    the piece to add
      */
+    //添加棋子
     public void addPiece(ChessPosition position, ChessPiece piece) {
-
-
+        GameBoard[position.getRow()-1][position.getColumn()-1] = piece;
     }
+    // -1是因为数组索引为0开始，而棋盘在1开始
 
     /**
      * Gets a chess piece on the chessboard
@@ -46,15 +43,27 @@ public class ChessBoard {
      * @return Either the piece at the position, or null if no piece is at that
      * position
      */
+    //获取指定棋子
     public ChessPiece getPiece(ChessPosition position) {
-        throw new RuntimeException("Not implemented");
+        return GameBoard[position.getRow()-1][position.getColumn()-1];
     }
 
     /**
      * Sets the board to the default starting board
      * (How the game of chess normally starts)
      */
-    public void resetBoard() {
-        throw new RuntimeException("Not implemented");
+    public void resetBoard() {}
+        for (int row = 1; row <= 8; row++) {
+            switch (row) {
+                case 1, 8:
+                    setBackRow(row);
+                    break;
+                case 2, 7:
+                    setPawnRow(row);
+                    break;
+                default:
+                    setNullRow(row);
+            }
+        }
     }
-}
+
