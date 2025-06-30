@@ -12,20 +12,20 @@ public abstract class PieceMoves {
 
     protected ChessBoard GameBoard;
     protected ChessPosition StartPosition;
-    protected HashSet<ChessMove> moveList;
-    protected ChessGame.TeamColor team;
+    protected HashSet<ChessMove> MoveList;
+    protected ChessGame.TeamColor Team;
 
     public PieceMoves(ChessBoard GameBoard, ChessPosition StartPosition) {
         this.GameBoard = GameBoard;
         this.StartPosition = StartPosition;
-        team = GameBoard.getPiece(StartPosition).getTeamColor();
-        moveList = new HashSet<ChessMove>();
+        Team = GameBoard.getPiece(StartPosition).getTeamColor();
+        MoveList = new HashSet<ChessMove>();
     }
 
     public void calculateMoves(){}
 
     public HashSet<ChessMove> getMoveList() {
-        return moveList;
+        return MoveList;
     }
 
     protected boolean isInBounds(int row, int col) {
@@ -34,15 +34,15 @@ public abstract class PieceMoves {
 
     protected boolean checkSpace(ChessPosition EndPosition) {
         if (GameBoard.getPiece(EndPosition) != null) {
-            if (GameBoard.getPiece(EndPosition).getTeamColor() != team) {
-                moveList.add(new ChessMove(StartPosition, EndPosition));
+            if (GameBoard.getPiece(EndPosition).getTeamColor() != Team) {
+                MoveList.add(new ChessMove(StartPosition, EndPosition));
                 System.out.print("Captured piece at (" + EndPosition.getRow() + ", " + EndPosition.getColumn() + "): ");
             }
             System.out.println("Stop checking");
             return false;
         }
         else {
-            moveList.add(new ChessMove(StartPosition, EndPosition));
+            MoveList.add(new ChessMove(StartPosition, EndPosition));
             System.out.println("Added move to null space at (" + EndPosition.getRow() + ", " + EndPosition.getColumn() + ") ");
             return true;
         }
@@ -56,11 +56,11 @@ public abstract class PieceMoves {
         if (!(o instanceof PieceMoves that)) {
             return false;
         }
-        return Objects.equals(moveList, that.moveList);
+        return Objects.equals(MoveList, that.MoveList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(moveList);
+        return Objects.hashCode(MoveList);
     }
 }
