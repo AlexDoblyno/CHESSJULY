@@ -64,15 +64,15 @@ public class ChessBoard {
     }
     public ChessGame.TeamColor resetCheckTeam(int row) {
         if (row == 1 || row == 2) {
-            System.out.println("WHITE TEAM IN ROW " + row);
+            System.out.println("White team in row:" + row);
             return ChessGame.TeamColor.WHITE;
         }
         else if (row == 7 || row == 8) {
-            System.out.println("BLACK TEAM IN ROW " + row);
+            System.out.println("Black team in row:" + row);
             return ChessGame.TeamColor.BLACK;
         }
         else {
-            System.out.println("NO TEAM IN ROW " + row);
+            System.out.println("No team in row: " + row);
             return null;
         }
     }
