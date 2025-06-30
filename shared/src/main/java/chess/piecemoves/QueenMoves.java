@@ -12,14 +12,13 @@ public class QueenMoves extends PieceMovesFar {
 
     @Override
     public void calculateMoves() {
-        ChessPosition checkPosition;
-        for (int row = StartPosition.getRow() - 2; row <= StartPosition.getRow() + 2; row++) {
-            for (int col = StartPosition.getColumn() - 2; col <= StartPosition.getColumn() + 2; col++) {
-                if (Math.abs(StartPosition.getRow() - row) + Math.abs(StartPosition.getColumn() - col) == 3 && isInBounds(row, col)) {
-                    checkPosition = new ChessPosition(row, col);
-                    checkSpace(checkPosition);
-                }
-            }
-        }
+        checkLine(-1, -1);
+        checkLine(1, 1);
+        checkLine(1, -1);
+        checkLine(-1, 1);
+        checkLine(-1, 0);
+        checkLine(1, 0);
+        checkLine(0, -1);
+        checkLine(0, 1);
     }
 }
