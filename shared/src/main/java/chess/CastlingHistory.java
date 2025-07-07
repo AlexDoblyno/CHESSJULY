@@ -8,7 +8,7 @@ public class CastlingHistory {
     boolean WHITEKingMoved;
     boolean BLACKKingMoved;
 
-    CastlingHistory(){
+    CastlingHistory() {
         WHITEKingMoved = false;
         BLACKKingMoved = false;
         WHITEKingRookMoved = false;
@@ -16,6 +16,13 @@ public class CastlingHistory {
         WHITEQueenRookMoved = false;
         BLACKQueenRookMoved = false;
     } //王车易位前，检测王与车有无移动，若是先前移动，无法王车易位
-    public void resetHistory(){
+
+    public void resetHistory() {
+        WHITEKingMoved = false;
+        BLACKKingMoved = false;
+        WHITEKingRookMoved = false;
+        BLACKKingRookMoved = false;
+        WHITEQueenRookMoved = false;
+        BLACKQueenRookMoved = false;
     }
 }
