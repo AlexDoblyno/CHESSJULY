@@ -14,30 +14,27 @@ import static java.lang.Math.abs;
  */
 public class ChessGame {
     private ChessBoard GameBoard;
-    private TeamColor TurnTeam;
-    private boolean GameOver;
-    //特殊棋子移动
-    private Boolean blackKingMoved = false;
-    private Boolean whiteKingMoved = false;
-    private Boolean blackLeftRookMoved = false;
-    private Boolean whiteLeftRookMoved = false;
-    private Boolean blackRightRookMoved = false;
-    private Boolean whiteRightRookMoved = false;
-    private ChessPosition pawnMovedTwo = null;
-
+    TeamColor currentTeam;
+    ChessMove previousMove;
+    CastlingHistory castlingHistory; //添加castling规则
+    CheckStalemate checkStalemate; //添加平局
+    InCheckDeterminer inCheckDeterminer; //
 
     public ChessGame() {
+        currentTeam = TeamColor.WHITE;
         GameBoard = new ChessBoard();
         GameBoard.resetBoard();
-        TurnTeam = TeamColor.WHITE;
-        GameOver = false;
+        previousMove = null;
+        castlingHistory = new CastlingHistory();
+        checkStalemate = new CheckStalemate(GameBoard);
+        inCheckDeterminer = new InCheckDeterminer(gameBoard);
     }
 
     /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        throw new RuntimeException("Not implemented");
+        return currentTeam;
     }
 
     /**
@@ -46,7 +43,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        currentTeam = team;
     }
 
     /**
@@ -65,7 +62,13 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        Collection<ChessMove> pieceMoves;
+        if (GameBoard.getPiece(startPosition) != null) {
+            pieceMoves = GameBoard.getPiece(startPosition).pieceMoves(gameBoard, startPosition);
+            pieceMoves.removeIf(this::testMove);
+            if (previousMove != null) {
+                /// inster ENPASSENT///
+            }
     }
 
     /**
@@ -94,8 +97,9 @@ public class ChessGame {
      * @param teamColor which team to check for checkmate
      * @return True if the specified team is in checkmate
      */
-    public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+    public boolean isInCheckmate(TeamColor TeamColor) {
+            inCheckDeterminer.setGameBoard(GameBoard);
+            return inCheckDeterminer.isInCheck(TeamColor);
     }
 
     /**
