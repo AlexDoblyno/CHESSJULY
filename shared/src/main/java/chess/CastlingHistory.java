@@ -25,4 +25,10 @@ public class CastlingHistory {
         WHITEQueenRookMoved = false;
         BLACKQueenRookMoved = false;
     }
+   public boolean isWHITEKingMoved() {
+        return WHITEKingMoved;
+    }
+    public boolean isBLACKKingMoved() {
+        return BLACKKingMoved;
+    }
 }
