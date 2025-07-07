@@ -172,19 +172,3 @@ public class ChessGame {
 
 
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof ChessGame chessGame)) {
-                return false;
-            }
-            return currentTeam == chessGame.currentTeam && Objects.equals(GameBoard, chessGame.GameBoard);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(currentTeam, GameBoard);
-        }
-    }
