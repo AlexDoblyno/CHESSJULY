@@ -50,7 +50,7 @@ public class CastlingHistory {
     }
 
     public boolean isBLACKQueenRookMoved() {
-        return  BLACKQueenRookMoved;
+        return BLACKQueenRookMoved;
     }
 
     public void setBLACKQueenRookMoved(boolean  BLACKQueenRookMoved) {

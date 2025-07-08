@@ -1,7 +1,8 @@
 package chess;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
 
 import static chess.ChessPiece.PieceType.ROOK;
 import static java.lang.Math.abs;
@@ -16,7 +17,7 @@ public class ChessGame {
     private ChessBoard GameBoard;
     TeamColor currentTeam;
     ChessMove previousMove;
-    CastlingHistory castlingHistory; //添加castling规则
+    CastlingHistory CastlingHistory; //添加castling规则
     CheckStalemate checkStalemate; //添加平局
     InCheckDeterminer inCheckDeterminer; //
 
@@ -25,7 +26,7 @@ public class ChessGame {
         GameBoard = new ChessBoard();
         GameBoard.resetBoard();
         previousMove = null;
-        castlingHistory = new CastlingHistory();
+        CastlingHistory = new CastlingHistory();
         checkStalemate = new CheckStalemate(GameBoard); //没有编写导致报错
         inCheckDeterminer = new InCheckDeterminer(GameBoard);
     }
@@ -67,8 +68,37 @@ public class ChessGame {
             pieceMoves = GameBoard.getPiece(startPosition).pieceMoves(GameBoard, startPosition);
             pieceMoves.removeIf(this::testMove);
             if (previousMove != null) {
-                /// inster ENPASSENT///
+
             }
+        }
+
+        private boolean checkPathClear(ChessPosition startPosition, int direction) {
+            ChessPosition pathPosition;
+            ChessMove pathMove;
+            for (int i = 1; i * direction + 5 > 1 && i * direction + 5 < 8; i++) {
+                pathPosition = new ChessPosition(startPosition.getRow(), (i * direction) + 5);
+                pathMove = new ChessMove(startPosition, pathPosition);
+                if (i <= 2) {
+                    if (GameBoard.getPiece(pathPosition) != null || testMove(pathMove)) {
+                        return false;
+                    }
+                } else if (GameBoard.getPiece(pathPosition) != null) {
+                    return false;
+                }
+            }
+            return true;
+
+
+        ChessPiece checkPiece = GameBoard.getPiece(startPosition);
+        if (checkPiece.getPieceType() == ChessPiece.PieceType.KING
+                && startPosition.getColumn() == 5
+                && !InCheckDeterminer(GameBoard.getPiece(startPosition).getTeamColor())) {
+            if ((checkPiece.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWHITEKingMoved())
+                    || (checkPiece.getTeamColor() == TeamColor.BLACK && !CastlingHistory.isBLACKKingMoved())) {
+                pieceMoves.addAll(getCastleMoves(startPosition));
+            }
+        }
+        return pieceMoves;
     }
 
     /**
@@ -147,7 +177,7 @@ public class ChessGame {
         public void setBoard(ChessBoard board) {
             ChessPosition setPosition;
             ChessPiece setPiece;
-            castlingHistory.resetHistory();
+            CastlingHistory.resetHistory();
             for (int i = 1; i <= 8; i++) {
                 for (int j = 1; j <= 8; j++) {
                     setPosition = new ChessPosition(i, j);
