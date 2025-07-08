@@ -48,88 +48,58 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-//setback setpawn setnull将在下方定义
-        for (int row = 1; row <= 8; row++) {
-            switch (row) {
-                case 1, 8:
-                    setBackRow(row);
+        for (int i = 1; i <= 8; i++){
+            switch (i){
+                case 1:
+                    setBackRow(i, ChessGame.TeamColor.WHITE);
                     break;
-                case 2, 7:
-                    setPawnRow(row);
+                case 2:
+                    setPawnRow(i, ChessGame.TeamColor.WHITE);
+                    break;
+                case 7:
+                    setPawnRow(i, ChessGame.TeamColor.BLACK);
+                    break;
+                case 8:
+                    setBackRow(i, ChessGame.TeamColor.BLACK);
                     break;
                 default:
-                    setNullRow(row);
+                    setNullSpaces(i);
             }
         }
     }
-    public ChessGame.TeamColor resetCheckTeam(int row) {
-        if (row == 1 || row == 2) {
-            System.out.println("White team in row:" + row);
-            return ChessGame.TeamColor.WHITE;
+
+    public void setNullSpaces(int row) {
+        for (int i = 0; i < 8; i++){
+            GameBoard[row][i] = null;
         }
-        else if (row == 7 || row == 8) {
-            System.out.println("Black team in row:" + row);
-            return ChessGame.TeamColor.BLACK;
-        }
-        else {
-            System.out.println("No team in row: " + row);
-            return null;
+    }
+    //将NullRoll改为Nullspaces
+     //这里没有改7/7
+    private void setPawnRow(int row, ChessGame.TeamColor teamColor) {
+        for (int col = 1; col <= 8; col++){
+            addPiece(new ChessPosition(row, col), new ChessPiece(teamColor, ChessPiece.PieceType.PAWN));
         }
     }
 
-    public void setNullRow(int row) {
-        ChessPosition setPosition;
+    private void setBackRow(int row, ChessGame.TeamColor teamColor) {
         for (int i = 1; i <= 8; i++) {
-            System.out.print("(" + row + ", " + i + ") null  ");
-            setPosition = new ChessPosition(row, i);
-            addPiece(setPosition, null);
-        }
-        System.out.println();
-    }
-    public void setPawnRow(int row) {
-        ChessGame.TeamColor team = resetCheckTeam(row);
-        ChessPosition setPosition;
-        for (int i = 1; i <= 8; i++){
-            System.out.print("(" + row + ", " + i + ") " + team.toString() + " Pawn  ");
-            setPosition = new ChessPosition(row, i);
-            addPiece(setPosition, new ChessPiece(team, ChessPiece.PieceType.PAWN));
-        }
-        System.out.println();
-    }
-
-    public void setBackRow(int row) {
-        ChessGame.TeamColor team = resetCheckTeam(row);
-        ChessPosition setPosition;
-        ChessPiece setPiece;
-        for (int col = 1; col <= 8; col++) {
-            System.out.print("(" + row + ", " + col + ") " + team.toString());
-            setPosition = new ChessPosition(row, col);
-            switch (col) {
+            switch (i){
                 case 1, 8:
-                    setPiece = new ChessPiece(team, ChessPiece.PieceType.ROOK);
-                    System.out.print(" Rook  ");
+                    addPiece(new ChessPosition(row, i), new ChessPiece(teamColor, ChessPiece.PieceType.ROOK));
                     break;
                 case 2, 7:
-                    setPiece = new ChessPiece(team, ChessPiece.PieceType.KNIGHT);
-                    System.out.print(" KNIGHT  ");
+                    addPiece(new ChessPosition(row, i), new ChessPiece(teamColor, ChessPiece.PieceType.KNIGHT));
                     break;
-                case 3,6:
-                    setPiece = new ChessPiece(team, ChessPiece.PieceType.BISHOP);
-                    System.out.print(" BISHOP  ");
+                case 3, 6:
+                    addPiece(new ChessPosition(row, i), new ChessPiece(teamColor, ChessPiece.PieceType.BISHOP));
                     break;
                 case 4:
-                    setPiece = new ChessPiece(team, ChessPiece.PieceType.QUEEN);
-                    System.out.print(" QUEEN  ");
+                    addPiece(new ChessPosition(row, i), new ChessPiece(teamColor, ChessPiece.PieceType.QUEEN));
                     break;
                 case 5:
-                    setPiece = new ChessPiece(team, ChessPiece.PieceType.KING);
-                    System.out.print(" KING  ");
+                    addPiece(new ChessPosition(row, i), new ChessPiece(teamColor, ChessPiece.PieceType.KING));
                     break;
-                default:
-                    setPiece = null;
             }
-            System.out.println();
-            addPiece(setPosition, setPiece);
         }
     }
 

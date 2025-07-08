@@ -15,27 +15,27 @@ import static java.lang.Math.abs;
  */
 public class ChessGame {
     private ChessBoard GameBoard;
-    TeamColor currentTeam;
-    ChessMove previousMove;
+    TeamColor CurrentTeam;
+    ChessMove PreviousMove;
     CastlingHistory CastlingHistory; //添加castling规则
-    CheckStalemate checkStalemate; //添加平局
-    InCheckDeterminer inCheckDeterminer; //
+    CheckStalemate CheckStalemate; //添加平局
+    InCheckDeterminer InCheckDeterminer; //
 
     public ChessGame() {
-        currentTeam = TeamColor.WHITE;
+        CurrentTeam = TeamColor.WHITE;
         GameBoard = new ChessBoard();
         GameBoard.resetBoard();
-        previousMove = null;
+        PreviousMove = null;
         CastlingHistory = new CastlingHistory();
-        checkStalemate = new CheckStalemate(GameBoard); //没有编写导致报错
-        inCheckDeterminer = new InCheckDeterminer(GameBoard);
+        CheckStalemate = new CheckStalemate(GameBoard); //没有编写导致报错
+        InCheckDeterminer = new InCheckDeterminer(GameBoard);
     }
 
     /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        return currentTeam;
+        return CurrentTeam;
     }
 
     /**
@@ -44,7 +44,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        currentTeam = team;
+        CurrentTeam = team;
     }
 
     /**
@@ -67,138 +67,191 @@ public class ChessGame {
         if (GameBoard.getPiece(startPosition) != null) {
             pieceMoves = GameBoard.getPiece(startPosition).pieceMoves(GameBoard, startPosition);
             pieceMoves.removeIf(this::testMove);
-            if (previousMove != null) {
+            if (PreviousMove != null) {
+
+                // 在这里些Enpasant//
 
             }
         }
-
-        private boolean checkPathClear(ChessPosition startPosition, int direction) {
-            ChessPosition pathPosition;
-            ChessMove pathMove;
-            for (int i = 1; i * direction + 5 > 1 && i * direction + 5 < 8; i++) {
-                pathPosition = new ChessPosition(startPosition.getRow(), (i * direction) + 5);
-                pathMove = new ChessMove(startPosition, pathPosition);
-                if (i <= 2) {
-                    if (GameBoard.getPiece(pathPosition) != null || testMove(pathMove)) {
-                        return false;
-                    }
-                } else if (GameBoard.getPiece(pathPosition) != null) {
-                    return false;
-                }
-            }
-            return true;
-
-
-        ChessPiece checkPiece = GameBoard.getPiece(startPosition);
-        if (checkPiece.getPieceType() == ChessPiece.PieceType.KING
+        // Check for castling
+        ChessPiece CheckPiece = GameBoard.getPiece(startPosition);
+        if (CheckPiece.getPieceType() == ChessPiece.PieceType.KING
                 && startPosition.getColumn() == 5
-                && !InCheckDeterminer(GameBoard.getPiece(startPosition).getTeamColor())) {
-            if ((checkPiece.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWHITEKingMoved())
-                    || (checkPiece.getTeamColor() == TeamColor.BLACK && !CastlingHistory.isBLACKKingMoved())) {
+                && !isInCheck(GameBoard.getPiece(startPosition).getTeamColor())) {
+            if ((CheckPiece.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWHITEKingMoved())
+                    ||(CheckPiece.getTeamColor() == TeamColor.BLACK && !CastlingHistory.isBLACKKingMoved())) {
                 pieceMoves.addAll(getCastleMoves(startPosition));
             }
         }
         return pieceMoves;
     }
-
-    /**
-     * Makes a move in a chess game
-     *
-     * @param move chess move to perform
-     * @throws InvalidMoveException if move is invalid
-     */
-    public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        else {
+        return null;
     }
+}
+private Collection<ChessMove> getCastleMoves (ChessPosition startPosition) {
+    Collection<ChessMove> CastleMoves = new HashSet<>();
+    ChessPiece king = GameBoard.getPiece(startPosition);
 
-    /**
-     * Determines if the given team is in check
-     *
-     * @param TeamColor which team to check for check
-     * @return True if the specified team is in check
-     */
-        public boolean isInCheck(TeamColor TeamColor) {
-            inCheckDeterminer.setGameBoard(GameBoard);
-            return inCheckDeterminer.isInCheck(TeamColor);
+    if (king.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWHITEKingMoved()) {
+        if (!CastlingHistory.isWHITEKingRookMoved() && checkPathClear(startPosition, 1)) {
+            CastleMoves.add(new ChessMove(startPosition, new ChessPosition(1, 7)));
         }
+        if (!CastlingHistory.isWHITEQueenRookMoved() && checkPathClear(startPosition, -1)) {
+            CastleMoves.add(new ChessMove(startPosition, new ChessPosition(1, 3)));
+        }
+    }
+    else if (king.getTeamColor() == TeamColor.BLACK && !CastlingHistory.isBLACKKingMoved()) {
+        if (!CastlingHistory.isBLACKKingRookMoved() && checkPathClear(startPosition, 1)) {
+            CastleMoves.add(new ChessMove(startPosition, new ChessPosition(8, 7)));
+        }
+        if (!CastlingHistory.isBLACKQueenRookMoved() && checkPathClear(startPosition, -1)) {
+            CastleMoves.add(new ChessMove(startPosition, new ChessPosition(8, 3)));
+        }
+    }
+    return CastleMoves;
+    /// castle ///
 
-    /**
-     * Determines if the given team is in checkmate
-     *
-     * @param TeamColor which team to check for checkmate
-     * @return True if the specified team is in checkmate
-     */
-        public boolean isInCheckmate(TeamColor TeamColor){
-            if (!isInCheck(TeamColor)) {
+    private boolean checkPathClear(ChessPosition startPosition, int direction) {
+        ChessPosition pathPosition;
+        ChessMove pathMove;
+        for (int i = 1; i * direction + 5 > 1 && i * direction + 5 < 8; i++) {
+            pathPosition = new ChessPosition(startPosition.getRow(), (i * direction) + 5);
+            pathMove = new ChessMove(startPosition, pathPosition);
+            if (i <= 2) {
+                if (GameBoard.getPiece(pathPosition) != null || testMove(pathMove)) {
+                    return false;
+                }
+            } else if (GameBoard.getPiece(pathPosition) != null) {
                 return false;
             }
+        }
+        return true;
+    }
+    public boolean testMove(ChessMove move) {
+        boolean inCheck;
+        ChessPiece targetPiece = GameBoard.getPiece(move.getEndPosition());
+        moveMaker(move);
+        inCheck = isInCheck(GameBoard.getPiece(move.getEndPosition()).getTeamColor());
+        if (GameBoard.getPiece(move.getEndPosition()).getPieceType() == ChessPiece.PieceType.KING) {
+            int direction = move.getEndPosition().getColumn() - move.getStartPosition().getColumn();
+            if (Math.abs(direction) == 2) {
+                undoCastleRook(move, direction);
+            }
+        }
+        undoMove(move, targetPiece);
+        return inCheck;
+    }
+    ChessPiece CheckPiece = GameBoard.getPiece(startPosition);
+    if (CheckPiece.getPieceType() == ChessPiece.PieceType.KING
+            && startPosition.getColumn() == 5
+            && !InCheckDeterminer(GameBoard.getPiece(startPosition).getTeamColor())) {
+        if ((CheckPiece.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWHITEKingMoved())
+                || (CheckPiece.getTeamColor() == TeamColor.BLACK && !CastlingHistory.isBLACKKingMoved())) {
+            pieceMoves.addAll(getCastleMoves(startPosition));
+        }
+    }
+    return PieceMoves;
+}
+
+/**
+ * Makes a move in a chess game
+ *
+ * @param move chess move to perform
+ * @throws InvalidMoveException if move is invalid
+ */
+public void makeMove(ChessMove move) throws InvalidMoveException {
+    throw new RuntimeException("Not implemented");
+}
+
+/**
+ * Determines if the given team is in check
+ *
+ * @param TeamColor which team to check for check
+ * @return True if the specified team is in check
+ */
+public boolean isInCheck(TeamColor TeamColor) {
+    InCheckDeterminer.setGameBoard(GameBoard);
+    return InCheckDeterminer.isInCheck(TeamColor);
+}
+
+/**
+ * Determines if the given team is in checkmate
+ *
+ * @param TeamColor which team to check for checkmate
+ * @return True if the specified team is in checkmate
+ */
+public boolean isInCheckmate(TeamColor TeamColor){
+    if (!isInCheck(TeamColor)) {
+        return false;
+    }
+    else {
+        for (ChessMove move : getAllTeamMoves(TeamColor)) {
+            if (!testMove(move)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+/**
+ * Determines if the given team is in stalemate, which here is defined as having
+ * no valid moves while not in check.
+ *
+ * @param TeamColor which team to check for stalemate
+ * @return True if the specified team is in stalemate, otherwise false
+ */
+private Collection<ChessMove> getAllTeamMoves(TeamColor TeamColor) {
+    Collection<ChessMove> allMoves = new HashSet<>();
+    ChessPosition checkPosition;
+    ChessPiece CheckPiece;
+    for (int row = 1; row <= 8; row++) {
+        for (int col = 1; col <= 8; col++) {
+            checkPosition = new ChessPosition(row, col);
+            CheckPiece = GameBoard.getPiece(checkPosition);
+            if (CheckPiece != null && CheckPiece.getTeamColor() == TeamColor) {
+                allMoves.addAll(validMoves(checkPosition));
+            }
+        }
+    }
+    return allMoves;
+}
+
+public boolean isInStalemate(TeamColor TeamColor) {
+    CheckStalemate.setGameBoard(GameBoard);
+    return CheckStalemate.isInStalemate(isInCheck(TeamColor), getAllTeamMoves(TeamColor));
+}
+/**
+ * Sets this game's chessboard with a given board
+ *
+ * @param board the new board to use
+ */
+public void setBoard(ChessBoard board) {
+    ChessPosition setPosition;
+    ChessPiece setPiece;
+    CastlingHistory.resetHistory();
+    for (int i = 1; i <= 8; i++) {
+        for (int j = 1; j <= 8; j++) {
+            setPosition = new ChessPosition(i, j);
+            if (board.getPiece(setPosition) != null) {
+                setPiece = new ChessPiece(board.getPiece(setPosition).getTeamColor(), board.getPiece(setPosition).getPieceType());
+                GameBoard.addPiece(setPosition, setPiece);
+            }
             else {
-                for (ChessMove move : getAllTeamMoves(TeamColor)) {
-                    if (!testMove(move)) {
-                        return false;
-                    }
-                }
-                return true;
+                GameBoard.addPiece(setPosition, null);
             }
         }
-
-    /**
-     * Determines if the given team is in stalemate, which here is defined as having
-     * no valid moves while not in check.
-     *
-     * @param TeamColor which team to check for stalemate
-     * @return True if the specified team is in stalemate, otherwise false
-     */
-        private Collection<ChessMove> getAllTeamMoves(TeamColor TeamColor) {
-            Collection<ChessMove> allMoves = new HashSet<>();
-            ChessPosition checkPosition;
-            ChessPiece checkPiece;
-            for (int row = 1; row <= 8; row++) {
-                for (int col = 1; col <= 8; col++) {
-                    checkPosition = new ChessPosition(row, col);
-                    checkPiece = GameBoard.getPiece(checkPosition);
-                    if (checkPiece != null && checkPiece.getTeamColor() == TeamColor) {
-                        allMoves.addAll(validMoves(checkPosition));
-                    }
-                }
-            }
-            return allMoves;
-        }
-
-        public boolean isInStalemate(TeamColor TeamColor) {
-            checkStalemate.setGameBoard(GameBoard);
-            return checkStalemate.isInStalemate(isInCheck(TeamColor), getAllTeamMoves(TeamColor));
-        }
-    /**
-     * Sets this game's chessboard with a given board
-     *
-     * @param board the new board to use
-     */
-        public void setBoard(ChessBoard board) {
-            ChessPosition setPosition;
-            ChessPiece setPiece;
-            CastlingHistory.resetHistory();
-            for (int i = 1; i <= 8; i++) {
-                for (int j = 1; j <= 8; j++) {
-                    setPosition = new ChessPosition(i, j);
-                    if (board.getPiece(setPosition) != null) {
-                        setPiece = new ChessPiece(board.getPiece(setPosition).getTeamColor(), board.getPiece(setPosition).getPieceType());
-                        GameBoard.addPiece(setPosition, setPiece);
-                    }
-                    else {
-                        GameBoard.addPiece(setPosition, null);
-                    }
-                }
-            }
-        }
-    /**
-     * Gets the current chessboard
-     *
-     * @return the chessboard
-     */
-        public ChessBoard getBoard() {
-            return GameBoard;
-        }
+    }
+}
+/**
+ * Gets the current chessboard
+ *
+ * @return the chessboard
+ */
+public ChessBoard getBoard() {
+    return GameBoard;
+}
 
 
 
