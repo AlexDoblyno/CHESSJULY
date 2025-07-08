@@ -14,8 +14,8 @@ import static java.lang.Math.abs;
  * signature of the existing methods.
  */
 public class ChessGame {
-    private ChessBoard GameBoard;
     TeamColor CurrentTeam;
+    ChessBoard GameBoard;
     ChessMove PreviousMove;
     CastlingHistory CastlingHistory; //添加castling规则
     CheckStalemate CheckStalemate; //添加平局
@@ -69,36 +69,36 @@ public class ChessGame {
             pieceMoves.removeIf(this::testMove);
             if (PreviousMove != null) {
 
-                // 在这里些Enpasant//
+                // Check for en passant
 
+                }
             }
-        }
-        // Check for castling
-        ChessPiece CheckPiece = GameBoard.getPiece(startPosition);
-        if (CheckPiece.getPieceType() == ChessPiece.PieceType.KING
-                && startPosition.getColumn() == 5
-                && !isInCheck(GameBoard.getPiece(startPosition).getTeamColor())) {
-            if ((CheckPiece.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWHITEKingMoved())
-                    ||(CheckPiece.getTeamColor() == TeamColor.BLACK && !CastlingHistory.isBLACKKingMoved())) {
-                pieceMoves.addAll(getCastleMoves(startPosition));
+            // Check for castling
+            ChessPiece checkPiece = GameBoard.getPiece(startPosition);
+            if (checkPiece.getPieceType() == ChessPiece.PieceType.KING
+                    && startPosition.getColumn() == 5
+                    && !isInCheck(GameBoard.getPiece(startPosition).getTeamColor())) {
+                if ((checkPiece.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWhiteKingMoved())
+                        ||(checkPiece.getTeamColor() == TeamColor.BLACK && !CastlingHistory.isBlackKingMoved())) {
+                    pieceMoves.addAll(getCastleMoves(startPosition));
+                }
             }
+            return pieceMoves;
         }
-        return pieceMoves;
-    }
         else {
-        return null;
-    }
-}
-private Collection<ChessMove> getCastleMoves (ChessPosition startPosition) {
-    Collection<ChessMove> CastleMoves = new HashSet<>();
-    ChessPiece king = GameBoard.getPiece(startPosition);
-
-    if (king.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWHITEKingMoved()) {
-        if (!CastlingHistory.isWHITEKingRookMoved() && checkPathClear(startPosition, 1)) {
-            CastleMoves.add(new ChessMove(startPosition, new ChessPosition(1, 7)));
+            return null;
         }
-        if (!CastlingHistory.isWHITEQueenRookMoved() && checkPathClear(startPosition, -1)) {
-            CastleMoves.add(new ChessMove(startPosition, new ChessPosition(1, 3)));
+    }
+    private Collection<ChessMove> getCastleMoves (ChessPosition startPosition) {
+        Collection<ChessMove> CastleMoves = new HashSet<>();
+        ChessPiece king = GameBoard.getPiece(startPosition);
+
+         if (king.getTeamColor() == TeamColor.WHITE && !CastlingHistory.isWHITEKingMoved()) {
+            if (!CastlingHistory.isWHITEKingRookMoved() && checkPathClear(startPosition, 1)) {
+                CastleMoves.add(new ChessMove(startPosition, new ChessPosition(1, 7)));
+        }
+            if (!CastlingHistory.isWHITEQueenRookMoved() && checkPathClear(startPosition, -1)) {
+                CastleMoves.add(new ChessMove(startPosition, new ChessPosition(1, 3)));
         }
     }
     else if (king.getTeamColor() == TeamColor.BLACK && !CastlingHistory.isBLACKKingMoved()) {
@@ -128,6 +128,7 @@ private Collection<ChessMove> getCastleMoves (ChessPosition startPosition) {
         }
         return true;
     }
+    
     public boolean testMove(ChessMove move) {
         boolean inCheck;
         ChessPiece targetPiece = GameBoard.getPiece(move.getEndPosition());
@@ -161,9 +162,25 @@ private Collection<ChessMove> getCastleMoves (ChessPosition startPosition) {
  * @throws InvalidMoveException if move is invalid
  */
 public void makeMove(ChessMove move) throws InvalidMoveException {
-    throw new RuntimeException("Not implemented");
+    if (GameBoard.getPiece(move.getStartPosition()) == null) {
+        throw new InvalidMoveException("no piece at start position");
+    }
+    else if (!validMoves(move.getStartPosition()).contains(move)) {
+        throw new InvalidMoveException("ERROR FOUND WHEN ATTEMPTING MOVE " + move + " {(" +
+                move.getStartPosition().getRow() + ", " + move.getStartPosition().getColumn() + ") ("
+                + move.getEndPosition().getRow() + ", " + move.getEndPosition().getColumn() + ")} " +
+                "move is invalid");
+    }
+    else if (GameBoard.getPiece(move.getStartPosition()).getTeamColor() != currentTeam) {
+        throw new InvalidMoveException("current team is" + currentTeam.toString() + ", wrong team move");
+    }
+    else {
+        moveMaker(move);
+        PreviousMove = move;
+        RookKingMoved(move);
+        CurrentTeam = (CurrentTeam == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE; // <- Me trying to make my code more concise
+    }
 }
-
 /**
  * Determines if the given team is in check
  *

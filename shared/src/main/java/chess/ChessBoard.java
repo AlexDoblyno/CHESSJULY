@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 public class ChessBoard {
 
-    private ChessPiece[][] GameBoard;
+    private final ChessPiece[][] GameBoard;
 
     public ChessBoard() {
 
@@ -102,7 +102,7 @@ public class ChessBoard {
             }
         }
     }
-    public void printBoard() {
+    public void PrintBoard() {
         for (int temprow = 0; temprow < 8; temprow++){
             for (int tempcol = 0; tempcol < 8; tempcol++) {
                 if (GameBoard[temprow][tempcol] != null) {
@@ -115,7 +115,7 @@ public class ChessBoard {
             }
             System.out.println();
         }
-    }
+    } //打印期盼
     private void PrintPiece(ChessPiece selectedPiece){
         if (selectedPiece.getTeamColor() == ChessGame.TeamColor.BLACK) {
             System.out.print("[B");
