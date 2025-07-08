@@ -102,7 +102,49 @@ public class ChessBoard {
             }
         }
     }
-
+    public void printBoard() {
+        for (int temprow = 0; temprow < 8; temprow++){
+            for (int tempcol = 0; tempcol < 8; tempcol++) {
+                if (GameBoard[temprow][tempcol] != null) {
+                    ChessPiece selectedPiece = GameBoard[temprow][tempcol];
+                    PrintPiece(selectedPiece);
+                }
+                else {
+                    System.out.print("[   ]");
+                }
+            }
+            System.out.println();
+        }
+    }
+    private void PrintPiece(ChessPiece selectedPiece){
+        if (selectedPiece.getTeamColor() == ChessGame.TeamColor.BLACK) {
+            System.out.print("[B");
+        }
+        else {
+            System.out.print("[W");
+        } //黑与白色前缀
+        if (selectedPiece.getPieceType() == ChessPiece.PieceType.PAWN) {
+            System.out.print("P]");
+        }
+        else if (selectedPiece.getPieceType() == ChessPiece.PieceType.ROOK) {
+            System.out.print("R]");
+        }
+        else if (selectedPiece.getPieceType() == ChessPiece.PieceType.KNIGHT) {
+            System.out.print("Kng]");
+        }
+        else if (selectedPiece.getPieceType() == ChessPiece.PieceType.BISHOP) {
+            System.out.print("B]");
+        }
+        else if (selectedPiece.getPieceType() == ChessPiece.PieceType.QUEEN) {
+            System.out.print("Q]");
+        }
+        else if (selectedPiece.getPieceType() == ChessPiece.PieceType.KING) {
+            System.out.print("K]");
+        }
+        else {
+            System.out.print(" ]");
+        }
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) {
