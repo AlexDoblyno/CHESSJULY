@@ -16,7 +16,7 @@ public class ChessGame {
     ChessMove previousMove;
     CastlingHistory castlingHistory;
     CheckStalemate checkStalemate;
-    InCheckDeterminer inCheckDeterminer;
+    CheckDeterminer CheckDeterminer;
 
     public ChessGame() {
         CurrentTeam = TeamColor.WHITE;
@@ -25,8 +25,8 @@ public class ChessGame {
         previousMove = null;
         castlingHistory = new CastlingHistory();
         checkStalemate = new CheckStalemate(GameBoard);
-        inCheckDeterminer = new InCheckDeterminer(GameBoard);
-    }
+        CheckDeterminer = new CheckDeterminer(GameBoard);
+    }//添加平局与将军
 
     /**
      * @return Which team's turn it is
@@ -368,8 +368,8 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor TeamColor) {
-        inCheckDeterminer.setGameBoard(GameBoard);
-        return inCheckDeterminer.isInCheck(TeamColor);
+        CheckDeterminer.setGameBoard(GameBoard);
+        return CheckDeterminer.isInCheck(TeamColor);
     }
 
     /**
