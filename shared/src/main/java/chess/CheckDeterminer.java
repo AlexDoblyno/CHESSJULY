@@ -35,7 +35,7 @@ public class CheckDeterminer {
         return null;
     }
 
-    private boolean checkKingStraights(ChessPosition kingPosition) {
+    private boolean CheckKingStraights(ChessPosition kingPosition) {
         for (int rowMod = -1; rowMod <= 1; rowMod++) {
             for (int colMod = -1; colMod <= 1; colMod++) {
                 if (rowMod != 0 || colMod != 0) {
@@ -78,7 +78,7 @@ public class CheckDeterminer {
         // If the danger move is in the move list, the king is in check.
         return targetMoves.contains(dangerMove) || targetMoves.contains(pawnDangerMove);
     }
-    private boolean checkKingKnights(ChessPosition kingPosition) {
+    private boolean CheckKingKnights(ChessPosition kingPosition) {
         int kingRow = kingPosition.getRow();
         int kingCol = kingPosition.getColumn();
         ChessGame.TeamColor kingColor = GameBoard.getPiece(kingPosition).getTeamColor();
