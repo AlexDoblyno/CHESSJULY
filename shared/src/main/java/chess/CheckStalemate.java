@@ -7,7 +7,7 @@ public class CheckStalemate {
 
     private ChessBoard GameBoard;
 
-    CheckStalemate (ChessBoard gameBoard) {
+    CheckStalemate (ChessBoard GameBoard) {
         this.GameBoard = GameBoard;
     }
     
@@ -20,7 +20,7 @@ public class CheckStalemate {
         }
         return false;
     }
-    private boolean isGarbageBoardState() {
+    private boolean GarbageBoardState() {
         if (containsNoLimitMovers()) {
             return false;
         }
@@ -78,3 +78,74 @@ public class CheckStalemate {
                     (blackKnights.size() == 2 && BLACKBishops.isEmpty() && whiteKnights.isEmpty() && WHITEBishops.isEmpty());
         }
     }
+    private boolean onSameColor(Collection<ChessPosition> pieces) {
+        int blackSquare = 0;
+        int whiteSquare = 0;
+        for (ChessPosition piece : pieces) {
+            if (piece.getColumn()%2 == 0) {
+                if (piece.getRow()%2 == 0) {
+                    whiteSquare++;
+                }
+                else {
+                    blackSquare++;
+                }
+            }
+            else {
+                if (piece.getRow()%2 == 0) {
+                    blackSquare++;
+                }
+                else {
+                    whiteSquare++;
+                }
+            }
+        }
+        return whiteSquare == 0 || blackSquare == 0;
+    }
+    private boolean containsNoLimitMovers() {
+        ChessPosition checkPosition;
+        ChessPiece checkPiece;
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                checkPosition = new ChessPosition(row, col);
+                checkPiece = GameBoard.getPiece(checkPosition);
+                if (checkPiece != null) {
+                    if (checkPiece.getPieceType() == ChessPiece.PieceType.PAWN ||
+                            checkPiece.getPieceType() == ChessPiece.PieceType.QUEEN ||
+                            checkPiece.getPieceType() == ChessPiece.PieceType.ROOK) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    private Collection<ChessPosition> extractPieces(Collection<ChessPosition> allPositions, ChessPiece.PieceType type) {
+        Collection<ChessPosition> pieces = new HashSet<>();
+        for (ChessPosition space : allPositions) {
+            if (GameBoard.getPiece(space).getPieceType() == type) {
+                pieces.add(space);
+            }
+        }
+        return pieces;
+    }
+    private Collection<ChessPosition> getTeamPieces(ChessGame.TeamColor color) {
+        Collection<ChessPosition> allPositions = new HashSet<>();
+        ChessPosition checkPosition;
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                checkPosition = new ChessPosition(row, col);
+                if (GameBoard.getPiece(checkPosition) != null &&
+                        GameBoard.getPiece(checkPosition).getTeamColor() == color) {
+                    allPositions.add(checkPosition);
+                }
+            }
+        }
+        return allPositions;
+    }
+
+    public void setGameBoard(ChessBoard GameBoard) {
+        this.GameBoard = GameBoard;
+    }
+}
+
+
