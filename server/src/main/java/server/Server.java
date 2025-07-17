@@ -2,7 +2,7 @@ package server;
 
 import models.AuthTokenData;
 import models.GameData;
-import models.MessageResponse;
+import models.Message;
 import models.UserData;
 import chess.ChessGame;
 import com.google.gson.JsonSyntaxException;
@@ -44,5 +44,33 @@ public class Server {
 
         Spark.awaitInitialization();
         return Spark.port();
+    }
+    private String registerUser(Request request, Response response) throws ServerException {
+        try {
+            // Store the user data from the request
+            UserData submittedUser = new Gson().fromJson(request.body(), UserData.class);
+
+
+            // Trim the username
+            String trimmedUsername = submittedUser.username().trim();
+            UserData user = new UserData(trimmedUsername, submittedUser.password(), submittedUser.email());
+
+            // Verify inputs
+            if (!validateInput(user.username()) || !validateInput(user.password()) || !validateEmail(user.email())) {
+                throw new ServerException("bad request", 400);
+            }
+
+            // Register user data
+            else {
+                AuthTokenData authToken = service.register(user);
+
+                response.status(200);
+                return gson.toJson(authToken);
+            }
+
+            // Catch exception from bad request
+        } catch (JsonSyntaxException e) {
+            throw new ServerException("bad request", 400);
+        }
     }
 
