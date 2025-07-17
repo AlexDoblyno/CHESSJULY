@@ -147,5 +147,3 @@ public class CheckStalemate {
         this.GameBoard = GameBoard;
     }
 }
-
-
