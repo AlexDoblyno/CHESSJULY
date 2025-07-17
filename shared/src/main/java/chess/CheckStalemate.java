@@ -10,7 +10,7 @@ public class CheckStalemate {
     CheckStalemate (ChessBoard GameBoard) {
         this.GameBoard = GameBoard;
     }
-    
+
     public boolean isInStalemate(boolean isInCheck, Collection<ChessMove> teamMoves) {
         if (!isInCheck) {
             if (teamMoves.isEmpty()) {
