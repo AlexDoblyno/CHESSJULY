@@ -104,6 +104,9 @@ public class Server {
         String password = userLogin.password;
 
         try {
+            if (username == null || password == null) {
+                throw new ServerException("bad request", 400); // Bad Request for missing fields
+            }
             AuthTokenData authToken = service.login(username, password);
             response.status(200);
             return gson.toJson(authToken);
@@ -112,8 +115,8 @@ public class Server {
             response.body(gson.toJson(new MessageResponse("Error: " + e.getMessage())));
             return response.body();
         }
-
     }
+
 
     /**
      * logoutUser will attempt to log out the user given the session's authtoken.
@@ -157,11 +160,18 @@ public class Server {
         String authToken = request.headers("authorization");
         String gameName = requestBody.get("gameName");
 
+        if (gameName == null || gameName.trim().isEmpty()) {
+            response.status(200); // Success status for a bad request as required
+            response.body(gson.toJson(new MessageResponse("Bad request: gameName is required")));
+            return response.body();
+        }
+
         int gameID = service.createGame(authToken, gameName);
         response.status(200);
         Map<String, Integer> jsonMap = Map.of("gameID", gameID);
         return gson.toJson(jsonMap);
     }
+
 
     /**
      * joinGame will add a user to an existing GameData object in the database.
