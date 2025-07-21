@@ -1,9 +1,9 @@
 package server;
 
-import models.AuthTokenData;
-import models.GameData;
-import models.MessageResponse;
-import models.UserData;
+import Models.AuthTokenData;
+import Models.GameData;
+import Models.MessageResponse;
+import Models.UserData;
 import chess.ChessGame;
 import com.google.gson.JsonSyntaxException;
 import service.Service;
@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class Server {
 
@@ -221,6 +222,7 @@ public class Server {
 
         if (e instanceof ServerException serverException) {
             statusCode = ((ServerException) e).getStatusCode();
+            System.out.println(statusCode);
             errorMessage = "Error: " + e.getMessage();
             messageResponse = new MessageResponse(errorMessage);
         }
@@ -256,8 +258,11 @@ public class Server {
 //        final String EMAIL_REGEX = "^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6})$";
 //        final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
-        //            return EMAIL_PATTERN.matcher(email).matches();
-        return email != null;
+        if (email != null) {
+//            return EMAIL_PATTERN.matcher(email).matches();
+            return true;
+        }
+        return false;
     }
 
     public void stop() {
