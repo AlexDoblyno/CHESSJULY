@@ -160,18 +160,18 @@ public class Server {
         String authToken = request.headers("authorization");
         String gameName = requestBody.get("gameName");
 
+        // 检查 gameName 是否为 null 或空字符串
         if (gameName == null || gameName.trim().isEmpty()) {
-            response.status(400); // Success status for a bad request as required
+            response.status(400); // 更改状态码为 400
             response.body(gson.toJson(new MessageResponse("Bad request: gameName is required")));
             return response.body();
         }
 
         int gameID = service.createGame(authToken, gameName);
-        response.status(400);
+        response.status(200);
         Map<String, Integer> jsonMap = Map.of("gameID", gameID);
         return gson.toJson(jsonMap);
     }
-
 
     /**
      * joinGame will add a user to an existing GameData object in the database.
