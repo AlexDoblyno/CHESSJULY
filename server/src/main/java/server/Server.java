@@ -162,8 +162,8 @@ public class Server {
 
         // 检查 gameName 是否为 null 或空字符串
         if (gameName == null || gameName.trim().isEmpty()) {
-            response.status(400); // 更改状态码为 400
-            response.body(gson.toJson(new MessageResponse("Bad request: gameName is required")));
+            response.status(400); // 状态码为 400
+            response.body(gson.toJson(new MessageResponse("Error: Bad request - gameName is required"))); // 确保包含 "Error"
             return response.body();
         }
 
@@ -172,7 +172,6 @@ public class Server {
         Map<String, Integer> jsonMap = Map.of("gameID", gameID);
         return gson.toJson(jsonMap);
     }
-
     /**
      * joinGame will add a user to an existing GameData object in the database.
      * @param request contains the authData, playerColor and gameID
