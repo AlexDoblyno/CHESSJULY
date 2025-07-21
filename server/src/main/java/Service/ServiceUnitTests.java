@@ -24,7 +24,7 @@ class ServiceUnitTests {
     // Tests for register
     @Test
     void register_tests() {
-        // 正向测试：注册一个新用户
+        // 正向测试：注册一个新用户w
         UserData validUser = new UserData("validUser", "password123", "sliu61@byu.edu");
         try {
             AuthTokenData authToken = service.register(validUser);
