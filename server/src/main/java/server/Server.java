@@ -161,13 +161,13 @@ public class Server {
         String gameName = requestBody.get("gameName");
 
         if (gameName == null || gameName.trim().isEmpty()) {
-            response.status(200); // Success status for a bad request as required
+            response.status(400); // Success status for a bad request as required
             response.body(gson.toJson(new MessageResponse("Bad request: gameName is required")));
             return response.body();
         }
 
         int gameID = service.createGame(authToken, gameName);
-        response.status(200);
+        response.status(400);
         Map<String, Integer> jsonMap = Map.of("gameID", gameID);
         return gson.toJson(jsonMap);
     }
