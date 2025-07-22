@@ -32,7 +32,7 @@ public class DatabaseManager {
             throw new RuntimeException("unable to process db.properties. " + ex.getMessage());
         }
     }
-
+//
     /**
      * Creates the database if it does not already exist.
      */
