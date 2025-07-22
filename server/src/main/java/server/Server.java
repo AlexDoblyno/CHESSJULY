@@ -1,5 +1,8 @@
 package server;
 
+import dataaccess.SqlAuthDataAccess;
+import dataaccess.SqlGameDataAccess;
+import dataaccess.SqlUserDataAccess;
 import models.AuthTokenData;
 import models.GameData;
 import models.MessageResponse;
@@ -21,6 +24,7 @@ public class Server {
 
     public Server() {
         service = new Service();
+        initializeDatabase();
     }
 
     public int run(int desiredPort) {
@@ -59,7 +63,6 @@ public class Server {
         try {
             // Store the user data from the request
             UserData submittedUser = new Gson().fromJson(request.body(), UserData.class);
-
 
             // Trim the username
             String trimmedUsername = submittedUser.username().trim();
@@ -103,9 +106,6 @@ public class Server {
         String password = userLogin.password;
 
         try {
-            if (username == null || password == null) {
-                throw new ServerException("bad request", 400); // Bad Request for missing fields
-            }
             AuthTokenData authToken = service.login(username, password);
             response.status(200);
             return gson.toJson(authToken);
@@ -114,8 +114,8 @@ public class Server {
             response.body(gson.toJson(new MessageResponse("Error: " + e.getMessage())));
             return response.body();
         }
-    }
 
+    }
 
     /**
      * logoutUser will attempt to log out the user given the session's authtoken.
@@ -159,18 +159,12 @@ public class Server {
         String authToken = request.headers("authorization");
         String gameName = requestBody.get("gameName");
 
-        // 检查 gameName 是否为 null 或空字符串
-        if (gameName == null || gameName.trim().isEmpty()) {
-            response.status(400); // 状态码为 400
-            response.body(gson.toJson(new MessageResponse("Error: Bad request - gameName is required"))); // 确保包含 "Error"
-            return response.body();
-        }
-
         int gameID = service.createGame(authToken, gameName);
         response.status(200);
         Map<String, Integer> jsonMap = Map.of("gameID", gameID);
         return gson.toJson(jsonMap);
     }
+
     /**
      * joinGame will add a user to an existing GameData object in the database.
      * @param request contains the authData, playerColor and gameID
@@ -211,7 +205,7 @@ public class Server {
      * @param response contains nothing but the success code, exception info, and my feelings of resignation at
      *                 having to make these large comment headers for every function (it's good practice)
      */
-    private Object clearDatabase(Request request, Response response) {
+    private Object clearDatabase(Request request, Response response) throws ServerException {
         service.clearApp();
         response.status(200);
         return "";
@@ -230,7 +224,6 @@ public class Server {
 
         if (e instanceof ServerException serverException) {
             statusCode = ((ServerException) e).getStatusCode();
-            System.out.println(statusCode);
             errorMessage = "Error: " + e.getMessage();
             messageResponse = new MessageResponse(errorMessage);
         }
@@ -266,11 +259,24 @@ public class Server {
 //        final String EMAIL_REGEX = "^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6})$";
 //        final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
-        if (email != null) {
-//            return EMAIL_PATTERN.matcher(email).matches();
-            return true;
+        //            return EMAIL_PATTERN.matcher(email).matches();
+        return email != null;
+    }
+
+    private void initializeDatabase() {
+        try {
+            // User data initialized first
+            SqlUserDataAccess userDataAccess = new SqlUserDataAccess();
+            userDataAccess.configureDatabase();
+
+            SqlGameDataAccess gameDataAccess = new SqlGameDataAccess();
+            SqlAuthDataAccess authDataAccess = new SqlAuthDataAccess();
+
+            authDataAccess.configureDatabase();
+            gameDataAccess.configureDatabase();
+        } catch (dataaccess.ServerException e) {
+            throw new RuntimeException("Database initialization failed: " + e.getMessage());
         }
-        return false;
     }
 
     public void stop() {
