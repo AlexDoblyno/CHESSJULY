@@ -30,7 +30,7 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
         } catch (SQLException e) {
             throw new ServerException("Userdata get failed: " + e.getMessage());
         } catch (DataAccessException e) {
-            throw new RuntimeException(e);
+            throw new ServerException("Userdata get failed: " + e.getMessage());
         }
         return null;
     }
@@ -74,7 +74,7 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
         } catch (SQLException e) {
             throw new ServerException("Userdata add failed: " + e.getMessage());
         } catch (DataAccessException e) {
-            throw new RuntimeException(e);
+            throw new ServerException("Userdata add failed: " + e.getMessage());
         }
     }
 
@@ -89,7 +89,7 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
         } catch (SQLException e) {
             throw new ServerException("UserData clear failed: " + e.getMessage());
         } catch (DataAccessException e) {
-            throw new RuntimeException(e);
+            throw new ServerException("UserData clear failed: " + e.getMessage());
         }
     }
 
@@ -115,7 +115,7 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
         } catch (SQLException e) {
             throw new ServerException("Update failed: " + e.getMessage());
         } catch (DataAccessException e) {
-            throw new RuntimeException(e);
+            throw new ServerException("Update failed: " + e.getMessage());
         }
     }
 
