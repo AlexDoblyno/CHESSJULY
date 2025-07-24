@@ -13,6 +13,8 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
             configureDatabase();
         } catch (ServerException e) {
             throw new RuntimeException(e);
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -26,7 +28,9 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
                 return response;
             }
         } catch (SQLException e) {
-            return null;
+            throw new ServerException("Userdata get failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
         return null;
     }
@@ -69,6 +73,8 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
             }
         } catch (SQLException e) {
             throw new ServerException("Userdata add failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -82,6 +88,8 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
             }
         } catch (SQLException e) {
             throw new ServerException("UserData clear failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -106,11 +114,13 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
             }
         } catch (SQLException e) {
             throw new ServerException("Update failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void configureDatabase() throws ServerException {
+    public void configureDatabase() throws ServerException, DataAccessException {
         DatabaseManager.createDatabase();
         try (var conn = DatabaseManager.getConnection()) {
             for (var statement : createStatements) {
@@ -118,7 +128,7 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
                     preparedStatement.executeUpdate();
                 }
             }
-        } catch (SQLException e) {
+        } catch (SQLException | DataAccessException e) {
             throw new ServerException(e.getMessage());
         }
 

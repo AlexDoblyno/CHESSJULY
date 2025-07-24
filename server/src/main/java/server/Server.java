@@ -1,5 +1,6 @@
 package server;
 
+import dataaccess.DataAccessException;
 import dataaccess.SqlAuthDataAccess;
 import dataaccess.SqlGameDataAccess;
 import dataaccess.SqlUserDataAccess;
@@ -276,6 +277,8 @@ public class Server {
             gameDataAccess.configureDatabase();
         } catch (dataaccess.ServerException e) {
             throw new RuntimeException("Database initialization failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 

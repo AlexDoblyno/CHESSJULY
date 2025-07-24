@@ -18,6 +18,8 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
             configureDatabase();
         } catch (ServerException e) {
             throw new RuntimeException(e);
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -40,6 +42,8 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
         } catch (SQLException e) {
             return null;
 //            throw new ServerException("GameData list get failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
         return gameList;
     }
@@ -59,7 +63,7 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
                     return deserializeGameData(response);
                 }
             }
-        } catch (SQLException e) {
+        } catch (SQLException | DataAccessException e) {
             throw new ServerException("gameData getGameByName failed: " + e.getMessage());
         }
     }
@@ -79,7 +83,7 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
                     return deserializeGameData(response);
                 }
             }
-        } catch (SQLException e) {
+        } catch (SQLException | DataAccessException e) {
             throw new ServerException("gameData getGameByID failed: " + e.getMessage());
         }
     }
@@ -103,7 +107,7 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
 
                 preparedStatement.executeUpdate();
             }
-        } catch (SQLException e) {
+        } catch (SQLException | DataAccessException e) {
             throw new ServerException("Create game failed: " + e.getMessage());
         }
     }
@@ -130,6 +134,8 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
             }
         } catch (SQLException e) {
             throw new ServerException("Join game failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -143,6 +149,8 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
             }
         } catch (SQLException e) {
             throw new ServerException("GameData clear failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -157,6 +165,8 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
             }
         } catch (SQLException e) {
             throw new ServerException("Update failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -202,7 +212,7 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
     };
 
     @Override
-    public void configureDatabase() throws ServerException {
+    public void configureDatabase() throws ServerException, DataAccessException {
         DatabaseManager.createDatabase();
         try (var conn = DatabaseManager.getConnection()) {
             for (var statement : createStatements) {
@@ -212,6 +222,8 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
             }
         } catch (SQLException e) {
             throw new ServerException(e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
 
     }

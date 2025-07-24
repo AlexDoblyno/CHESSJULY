@@ -11,7 +11,7 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
     public SqlAuthDataAccess () {
         try {
             configureDatabase();
-        } catch (ServerException e) {
+        } catch (ServerException | DataAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -25,10 +25,13 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
                 preparedStatement.setString(1, authData.authToken());
                 preparedStatement.setString(2, authData.username());
                 preparedStatement.executeUpdate();
+            }catch (SQLException e) {
+                throw new ServerException("Authdata add failed: " + e.getMessage());
             }
-        } catch (SQLException | ServerException e) {
+        } catch (DataAccessException | SQLException e) {
             throw new ServerException("Authdata add failed: " + e.getMessage());
         }
+
     }
 
     @Override
@@ -45,7 +48,7 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
                     throw new ServerException("Auth token not found");
                 }
             }
-        } catch (SQLException | ServerException e) {
+        } catch (SQLException | ServerException | DataAccessException e) {
             throw new ServerException("Authdata remove failed: " + e.getMessage());
         }
 
@@ -67,7 +70,7 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
                             response.getString("username"));
                 }
             }
-        } catch (SQLException | ServerException e) {
+        } catch (SQLException | ServerException | DataAccessException e) {
             return null;
 //            throw new ServerException("Authdata get failed: " + e.getMessage());
         }
@@ -81,7 +84,7 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
             try (var preparedStatement = conn.prepareStatement(clear)) {
                 preparedStatement.executeUpdate();
             }
-        } catch (SQLException e) {
+        } catch (SQLException | DataAccessException e) {
             throw new ServerException("AuthData clear failed: " + e.getMessage());
         }
     }
@@ -95,7 +98,7 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
                 }
                 return preparedStatement.executeUpdate();
             }
-        } catch (SQLException | ServerException e) {
+        } catch (SQLException | DataAccessException e) {
             throw new ServerException("Update failed: " + e.getMessage());
         }
     }
@@ -110,7 +113,7 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
     };
 
     @Override
-    public void configureDatabase() throws ServerException {
+    public void configureDatabase() throws ServerException, DataAccessException {
         DatabaseManager.createDatabase();
         try (var conn = DatabaseManager.getConnection()) {
             for (var statement : createStatements) {
@@ -120,6 +123,8 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
             }
         } catch (SQLException e) {
             throw new ServerException("Database creation failed: " + e.getMessage());
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
         }
 
     }
