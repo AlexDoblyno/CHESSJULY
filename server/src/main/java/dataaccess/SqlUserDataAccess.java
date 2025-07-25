@@ -9,14 +9,10 @@ import java.sql.SQLException;
 public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
 
     public SqlUserDataAccess () {
-        try {
+
             configureDatabase();
-        } catch (ServerException e) {
-            throw new RuntimeException(e);
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
+
         }
-    }
 
     @Override
     public UserData getUserData(String username) throws ServerException, server.ServerException {
