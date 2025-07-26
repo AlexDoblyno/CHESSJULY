@@ -205,7 +205,7 @@ public class Server {
         Map<String, Object> requestBody = gson.fromJson(request.body(), Map.class);
         ChessGame.TeamColor teamColor;
         String authData;
-
+//commit
         // Assign variables for our Service function call
         authData = request.headers("authorization");
 

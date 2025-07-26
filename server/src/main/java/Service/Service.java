@@ -103,12 +103,14 @@ public class Service {
         try {
             AuthTokenData authData = authDataAccess.getAuthData(authToken);
             if (authData == null) {
-                throw new ServerException("unauthorized", 401);
+                throw new ServerException("Error! Auth Token not found", 401);
             }
             authDataAccess.removeAuthData(authData);
         } catch (ServerException | dataaccess.ServerException e) {
             if (e.getMessage().contains("unauthorized")) {
                 throw new ServerException(e.getMessage(), 401);
+            }else if(e.getMessage().contains("not found")){
+                throw new ServerException("Error! Auth Token not found", 401);
             }
             throw new ServerException(e.getMessage(), 500);
         }
