@@ -146,7 +146,18 @@ public class Server {
     private Object logoutUser(Request request, Response response) throws ServerException {
         String authToken = request.headers("authorization");
 
-        service.logOut(authToken);
+        try{
+            service.logOut(authToken);
+        } catch (ServerException e) {
+            e.printStackTrace();
+            if (e.getMessage().contains("not found")) {
+                return createErrorResponse(response, e.getMessage(), 401);
+            }else if(e.getMessage().contains("bad request")) {
+                return createErrorResponse(response, e.getMessage(), 400);
+            }else{
+                return createErrorResponse(response, e.getMessage(), 500);
+            }
+        }
         response.status(200);
         return "";
     }
