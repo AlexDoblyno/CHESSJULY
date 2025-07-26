@@ -49,15 +49,19 @@ public class Service {
                 authDataAccess.addAuthData(authTokenData);
 
                 return authTokenData;
-            }
-            else {
-                throw new ServerException("already taken", 403);
+            }else {
+                return null;
             }
         } catch (dataaccess.ServerException e) {
             if (e.getMessage().contains("unauthorized")) {
                 throw new ServerException(e.getMessage(), 401);
+            }else if(e.getMessage().contains("taken"))
+            {
+                throw new ServerException("already taken", 403);
             }
-            throw new ServerException(e.getMessage(), 500);
+            else{
+                throw new ServerException(e.getMessage(), 500);
+            }
         }
     }
 
@@ -223,7 +227,11 @@ public class Service {
                 return generateAuthToken();
             }
         } catch (dataaccess.ServerException e) {
-            throw new ServerException(e.getMessage(), 500);
+            if (e.getMessage().contains("not found")) {
+                return authToken;
+            } else {
+                new ServerException(e.getMessage(), 500);
+            }
         }
         return authToken;
     }

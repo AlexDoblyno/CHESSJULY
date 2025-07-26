@@ -9,25 +9,34 @@ import java.sql.SQLException;
 public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
 
     public SqlUserDataAccess () {
-
-            configureDatabase();
-
+            try {
+                configureDatabase();
+            } catch (ServerException e) {
+                return ;
+            }
         }
 
     @Override
     public UserData getUserData(String username) throws ServerException, server.ServerException {
-        try (var conn = DatabaseManager.getConnection()) {
-            var fetch = "SELECT * FROM UserData WHERE username = ?";
-
+        Connection conn;
+        try{
+            conn = DatabaseManager.getConnection();
+        } catch (DataAccessException e) {
+            throw new ServerException("Error Userdata get failed: " + e.getMessage());
+        }
+        var fetch = "SELECT * FROM UserData WHERE username = ?";
+        try {
             UserData response = getUserDataFetch(username, conn, fetch);
             if (response.username() != null && response.password() != null && response.email() != null) {
                 return response;
             }
-        } catch (SQLException e) {
-            throw new ServerException("Userdata get failed: " + e.getMessage());
-        } catch (DataAccessException e) {
-            throw new ServerException("Userdata get failed: " + e.getMessage());
-        }
+        }catch (SQLException e) {
+            if(e.getMessage().contains("not found")){
+                return null;
+            }else{
+                throw new ServerException("Userdata get failed: " + e.getMessage());
+                }
+            }
         return null;
     }
 
@@ -44,12 +53,12 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
             preparedStatement.setString(1, username);
 
             try (var response = preparedStatement.executeQuery()) {
-                if (response.next()) {
+                try {
+                    response.next();
                     return new UserData(response.getString("username"),
                             response.getString("password"),
                             response.getString("email"));
-                }
-                else {
+                } catch (SQLException e) {
                     throw new SQLException("User not found");
                 }
             }
@@ -116,8 +125,12 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
     }
 
     @Override
-    public void configureDatabase() throws ServerException, DataAccessException {
-        DatabaseManager.createDatabase();
+    public void configureDatabase() throws ServerException {
+        try {
+            DatabaseManager.createDatabase();
+        } catch (DataAccessException e) {
+            throw new ServerException(e.getMessage());
+        }
         try (var conn = DatabaseManager.getConnection()) {
             for (var statement : createStatements) {
                 try (var preparedStatement = conn.prepareStatement(statement)) {

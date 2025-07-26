@@ -60,7 +60,7 @@ public class Server {
      * @return the AuthTokenData object, serialized as a JSON object.
      * @throws ServerException
      */
-    private String registerUser(Request request, Response response) throws ServerException {
+    private String registerUser(Request request, Response response) {
         try {
             // Store the user data from the request
             UserData submittedUser = new Gson().fromJson(request.body(), UserData.class);
@@ -75,17 +75,30 @@ public class Server {
             }
 
             // Register user data
-            else {
-                AuthTokenData authToken = service.register(user);
+            AuthTokenData authToken = service.register(user);
+            response.status(200);
+            return gson.toJson(authToken);
 
-                response.status(200);
-                return gson.toJson(authToken);
-            }
-
-            // Catch exception from bad request
         } catch (JsonSyntaxException e) {
-            throw new ServerException("bad request", 400);
+            // Handle invalid JSON structure
+            e.printStackTrace(); // 打印日志
+            return createErrorResponse(response, "bad request", 400);
+
+        } catch (ServerException e) {
+            // Handle ServerException and create a meaningful response
+            e.printStackTrace();
+            if (e.getMessage().contains("unauthorized")) {
+                return createErrorResponse(response, e.getMessage(), 401);
+            }else{
+                return createErrorResponse(response, e.getMessage(), 500);
+            }
         }
+    }
+
+    // 添加一个通用的方法来创建错误响应
+    private String createErrorResponse(Response response, String errorMessage, int statusCode) {
+        response.status(statusCode);
+        return gson.toJson(new MessageResponse(errorMessage)); // 构建错误信息的 JSON 响应
     }
 
     /**
@@ -103,6 +116,10 @@ public class Server {
 
         // Store the credentials from the request
         UserLoginCredentials userLogin = new Gson().fromJson(request.body(), UserLoginCredentials.class);
+        if (!validateInput(userLogin.username()) || !validateInput(userLogin.password())) {
+            throw new ServerException("bad request", 400);
+        }
+
         String username = userLogin.username;
         String password = userLogin.password;
 
