@@ -36,7 +36,7 @@ public class Service {
     public AuthTokenData register(UserData userData) throws ServerException {
         // Input validation on the service level
         if (userData == null || userData.username() == null || userData.password() == null || userData.email() == null) {
-            throw new ServerException("bad request", 400);
+            throw new ServerException("Error: bad request", 400);
         }
         try {
             if (userDataAccess.getUserData(userData.username()) == null) {
