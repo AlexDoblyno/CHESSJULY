@@ -71,7 +71,7 @@ public class Server {
 
             // Verify inputs
             if (!validateInput(user.username()) || !validateInput(user.password()) || !validateEmail(user.email())) {
-                throw new ServerException("bad request", 400);
+                throw new ServerException("Error: bad request", 400);
             }
 
             // Register user data
@@ -82,13 +82,15 @@ public class Server {
         } catch (JsonSyntaxException e) {
             // Handle invalid JSON structure
             e.printStackTrace(); // 打印日志
-            return createErrorResponse(response, "bad request", 400);
+            return createErrorResponse(response, "Error! bad request", 400);
 
         } catch (ServerException e) {
             // Handle ServerException and create a meaningful response
             e.printStackTrace();
             if (e.getMessage().contains("unauthorized")) {
                 return createErrorResponse(response, e.getMessage(), 401);
+            }else if(e.getMessage().contains("bad request")) {
+                return createErrorResponse(response, e.getMessage(), 400);
             }else{
                 return createErrorResponse(response, e.getMessage(), 500);
             }
