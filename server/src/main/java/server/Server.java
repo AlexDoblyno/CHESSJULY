@@ -75,7 +75,12 @@ public class Server {
             }
 
             // Register user data
-            AuthTokenData authToken = service.register(user);
+            AuthTokenData authToken = null;
+            try {
+                authToken = service.register(user);
+            } catch (ServerException e) {
+                throw new ServerException("Error: Forbidden", 403);
+            }
             response.status(200);
             return gson.toJson(authToken);
 
@@ -91,7 +96,10 @@ public class Server {
                 return createErrorResponse(response, e.getMessage(), 401);
             }else if(e.getMessage().contains("bad request")) {
                 return createErrorResponse(response, e.getMessage(), 400);
-            }else{
+            } else if (e.getMessage().contains("Forbidden")) {
+                return createErrorResponse(response, e.getMessage(), 403);
+            }else
+            {
                 return createErrorResponse(response, e.getMessage(), 500);
             }
         }
@@ -171,8 +179,12 @@ public class Server {
      */
     private String listGame(Request request, Response response) throws ServerException {
         String authToken = request.headers("authorization");
-
-        Collection<GameData> gameList = service.listGames(authToken);
+        Collection<GameData> gameList = null;
+        try {
+            gameList = service.listGames(authToken);
+        } catch (ServerException e) {
+            throw new ServerException("Unauthorized", 401);
+        }
         response.status(200);
         Map<String, Object> jsonMap = Map.of("games", gameList);
         return gson.toJson(jsonMap);
