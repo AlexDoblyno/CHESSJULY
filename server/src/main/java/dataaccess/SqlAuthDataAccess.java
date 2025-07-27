@@ -72,7 +72,7 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
             }
         } catch (SQLException | ServerException | DataAccessException e) {
 
-            throw new ServerException("Authdata get failed: " + e.getMessage());
+            throw new ServerException("Error: Authdata get failed: " + e.getMessage());
         }
     }
 

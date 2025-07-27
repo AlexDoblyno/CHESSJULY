@@ -79,7 +79,8 @@ public class Server {
             try {
                 authToken = service.register(user);
             } catch (ServerException e) {
-                throw new ServerException("Error: Forbidden", 403);
+                response.status(e.getStatusCode());
+                    throw new ServerException("error| "+e.getMessage(),e.getStatusCode());
             }
             response.status(200);
             return gson.toJson(authToken);
@@ -92,16 +93,7 @@ public class Server {
         } catch (ServerException e) {
             // Handle ServerException and create a meaningful response
             e.printStackTrace();
-            if (e.getMessage().contains("unauthorized")) {
-                return createErrorResponse(response, e.getMessage(), 401);
-            }else if(e.getMessage().contains("bad request")) {
-                return createErrorResponse(response, e.getMessage(), 400);
-            } else if (e.getMessage().contains("Forbidden")) {
-                return createErrorResponse(response, e.getMessage(), 403);
-            }else
-            {
-                return createErrorResponse(response, e.getMessage(), 500);
-            }
+            return createErrorResponse(response, "error| "+e.getMessage(), e.getStatusCode());
         }
     }
 
@@ -158,13 +150,8 @@ public class Server {
             service.logOut(authToken);
         } catch (ServerException e) {
             e.printStackTrace();
-            if (e.getMessage().contains("not found")) {
-                return createErrorResponse(response, e.getMessage(), 401);
-            }else if(e.getMessage().contains("bad request")) {
-                return createErrorResponse(response, e.getMessage(), 400);
-            }else{
-                return createErrorResponse(response, e.getMessage(), 500);
-            }
+            response.status(e.getStatusCode());
+            return createErrorResponse(response, "error| "+ e.getMessage(), e.getStatusCode());
         }
         response.status(200);
         return "";
@@ -183,7 +170,7 @@ public class Server {
         try {
             gameList = service.listGames(authToken);
         } catch (ServerException e) {
-            throw new ServerException("Unauthorized", 401);
+            throw new ServerException("Error: " + e.getMessage(), e.getStatusCode());
         }
         response.status(200);
         Map<String, Object> jsonMap = Map.of("games", gameList);
@@ -202,7 +189,13 @@ public class Server {
         String authToken = request.headers("authorization");
         String gameName = requestBody.get("gameName");
 
-        int gameID = service.createGame(authToken, gameName);
+        int gameID;
+        try{
+            gameID = service.createGame(authToken, gameName);
+        }catch (ServerException e){
+            response.status(e.getStatusCode());
+            return createErrorResponse(response, e.getMessage(), e.getStatusCode());
+        }
         response.status(200);
         Map<String, Integer> jsonMap = Map.of("gameID", gameID);
         return gson.toJson(jsonMap);

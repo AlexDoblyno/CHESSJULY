@@ -34,7 +34,7 @@ public class SqlUserDataAccess implements UserDataAccess, SqlAccess {
             if(e.getMessage().contains("not found")){
                 return null;
             }else{
-                throw new ServerException("Userdata get failed: " + e.getMessage());
+                throw new ServerException("Error: Userdata get failed: " + e.getMessage());
                 }
             }
         return null;
