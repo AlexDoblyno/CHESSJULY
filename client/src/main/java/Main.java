@@ -3,7 +3,6 @@ import client.ChessClient;
 import exception.ResponseException;
 import ui.BaseUI;
 import ui.PreloginUI;
-import ui.UIState;
 
 public class Main {
     public static void main(String[] args) {

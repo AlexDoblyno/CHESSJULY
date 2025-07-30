@@ -1,7 +1,6 @@
 package exception;
 
 import ui.BaseUI;
-import ui.UIState;
 
 /**
  * UIStateException is used to help us transition between UI States without closing the scanner or any of the previous

@@ -4,7 +4,6 @@ import client.ChessClient;
 import exception.ResponseException;
 import exception.UIStateException;
 
-import java.io.InputStream;
 import java.util.Scanner;
 
 public abstract class BaseUI implements UIState{
