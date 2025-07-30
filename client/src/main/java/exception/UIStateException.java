@@ -10,20 +10,20 @@ import ui.UIState;
  * Theoretically this SHOULD work. It may be poor practice? It makes sense in my head.
  */
 public class UIStateException extends ResponseException {
-    private final BaseUI nextState;
-    private final String message;
+  private final BaseUI nextState;
+  private final String message;
 
-    public UIStateException(BaseUI nextState, String message) {
-        super("Transitioning UIState", 200);
-        this.nextState = nextState;
-        this.message = message;
-    }
+  public UIStateException(BaseUI nextState, String message) {
+    super("Transitioning UIState", 200);
+    this.nextState = nextState;
+    this.message = message;
+  }
 
-    public BaseUI getNextState() {
-        return nextState;
-    }
+  public BaseUI getNextState() {
+    return nextState;
+  }
 
-    public String getMessage() {
-        return message;
-    }
+  public String getMessage() {
+    return message;
+  }
 }
