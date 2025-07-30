@@ -106,4 +106,26 @@ public class ServerFacade {
         return response;
     }
 
+    private void attemptHttpRequest(HttpURLConnection connection) throws ResponseException, IOException {
+        int statusCode = connection.getResponseCode();
+        // Ensure status code is in the 200 range. If it doesn't, we figure out what to throw.
+        if (statusCode / 100 != 2) {
+            try (InputStream errorStream = connection.getErrorStream()) {
+                if (errorStream != null) {
+                    throw ResponseException.fromJson(errorStream);
+                }
+            }
+            throw new ResponseException("Other error: " + statusCode, statusCode);
+        }
+    }
+
+    private static void writeJsonBody(Object request, HttpURLConnection connection) throws IOException {
+        if (request != null) {
+            connection.addRequestProperty("Content-Type", "application/json");
+            String jsonRequest = new Gson().toJson(request);
+            try (OutputStream requestBody = connection.getOutputStream()) {
+                requestBody.write(jsonRequest.getBytes());
+            }
+        }
+    }
 }
