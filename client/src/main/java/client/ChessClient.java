@@ -113,7 +113,8 @@ public class ChessClient {
 
     // parameters[1] is the gameID
     public String observeGame(String... parameters) throws ResponseException {
-        GameData gameData = dataCache.getGameByIndex(Integer.parseInt(parameters[1]));
+        int gameindex = Integer.parseInt(parameters[0]);
+        GameData gameData = dataCache.getGameByIndex(gameindex);
 
         server.joinGame(dataCache.getAuthToken(), null, gameData.gameID());
 
