@@ -26,7 +26,7 @@ public class GameUI extends BaseUI {
     }
 
     private void quitGame() throws ResponseException {
-        int gameID = client.getDataCache().getCurrentGameID();
+        int gameID = client.getDataCache().getCurrentGameID()+1;
         String gameName = client.getDataCache().getGameByIndex(gameID).gameName();
         client.getDataCache().setCurrentGameID(0);
         String returnStatement = "Left game " + gameName + "successfully.";

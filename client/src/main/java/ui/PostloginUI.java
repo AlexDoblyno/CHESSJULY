@@ -67,6 +67,8 @@ public class PostloginUI extends BaseUI {
         ChessboardDrawer drawer = new ChessboardDrawer(gameData.game(), ChessGame.TeamColor.WHITE);
         GameUI gameUI = new GameUI(client, drawer, false);
 
+        //System.out.println(result);
+
         throw new UIStateException(gameUI, result);
     }
 

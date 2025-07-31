@@ -219,6 +219,8 @@ public class Server {
                 teamColor = ChessGame.TeamColor.WHITE;
             } else if (((String) requestBody.get("playerColor")).equalsIgnoreCase("BLACK")){
                 teamColor = ChessGame.TeamColor.BLACK;
+            }else if (((String) requestBody.get("playerColor")).equalsIgnoreCase("OBSERVE")){
+                teamColor = ChessGame.TeamColor.OBSERVE;
             }
             else {
                 throw new ServerException("bad request", 400);

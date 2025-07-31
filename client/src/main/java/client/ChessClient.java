@@ -10,6 +10,8 @@ import ui.*;
 
 import java.util.Collection;
 
+import static chess.ChessGame.TeamColor.OBSERVE;
+
 public class ChessClient {
     private final ServerFacade server;
     private final String serverURL;
@@ -116,7 +118,7 @@ public class ChessClient {
         int gameindex = Integer.parseInt(parameters[0]);
         GameData gameData = dataCache.getGameByIndex(gameindex);
 
-        server.joinGame(dataCache.getAuthToken(), null, gameData.gameID());
+        server.joinGame(dataCache.getAuthToken(), OBSERVE, gameData.gameID());
 
         // Set the gameboard drawer
         drawBoard.setChessGame(gameData.game());
