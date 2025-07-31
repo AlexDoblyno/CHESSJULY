@@ -33,10 +33,18 @@ public class ChessboardDrawer {
 
         // 打印A~H标签
         boardString.append(formatCoordinates);
-        boardString.append("   a b c d e f g h\n");
+        boardString.append(" \u2003a \u2003b \u2003c \u2003d \u2003e \u2003f \u2003g \u2003h \u2003");
+        boardString.append(EscapeSequences.RESET_TEXT_COLOR).append(EscapeSequences.RESET_BG_COLOR);
+        boardString.append("\n");
         boardString.append(clearFormatting);
 
         writeChessBoard(direction, formatCoordinates, clearFormatting);
+
+        boardString.append(formatCoordinates);
+        boardString.append(" \u2003a \u2003b \u2003c \u2003d \u2003e \u2003f \u2003g \u2003h \u2003");
+        boardString.append(EscapeSequences.RESET_TEXT_COLOR).append(EscapeSequences.RESET_BG_COLOR);
+        boardString.append("\n");
+        boardString.append(clearFormatting);
         return boardString.toString();
     }
 
@@ -54,6 +62,8 @@ public class ChessboardDrawer {
                 boardString.append(getSquareColor(row, col)).append(getPiece(printPiece));
                 boardString.append(EscapeSequences.RESET_TEXT_COLOR).append(EscapeSequences.RESET_BG_COLOR);
             }
+            boardString.append(formatCoordinates).append(displayRow).append(" ").append(clearFormatting);
+            boardString.append(EscapeSequences.RESET_TEXT_COLOR).append(EscapeSequences.RESET_BG_COLOR);
             boardString.append("\n");
         }
     }
@@ -72,9 +82,9 @@ public class ChessboardDrawer {
     private String getPiece(ChessPiece chessPiece) {
         StringBuilder pieceString = new StringBuilder();
         if (chessPiece == null) {
-            pieceString.append("   ");
+            pieceString.append(" \u2003 ");
         } else {
-            pieceString.append(" ");
+            //pieceString.append(" ");
 
             switch (chessPiece.getPieceType()) {
                 case KING -> pieceString.append(chessPiece.getTeamColor() == ChessGame.TeamColor.WHITE ?
@@ -91,7 +101,7 @@ public class ChessboardDrawer {
                         EscapeSequences.WHITE_PAWN : EscapeSequences.BLACK_PAWN);
             }
             ;
-            pieceString.append(" ");
+            //pieceString.append(" ");
         }
         return pieceString.toString();
     }
