@@ -43,14 +43,14 @@ public class ServerFacade {
         var path = "/game";
         // Record for the game collection
         record ListedGames(Collection<GameData> games) {}
-        // Convert return into GameData collection
+        // Convert return into GameData collection 将返回值转换为 GameData 集合
         return this.makeRequest("GET", path, null, ListedGames.class, authToken).games;
     }
 
     public int createGame(String authToken, String gameName) throws ResponseException {
         var path = "/game";
         var requestBody = Map.of("gameName", gameName);
-        // Record for int response conversion
+        // int 响应转换记录
         record createdGame(int gameID) {}
         return this.makeRequest("POST", path, requestBody, createdGame.class, authToken).gameID;
     }
@@ -67,20 +67,21 @@ public class ServerFacade {
     }
 
     // These helper functions were written by examining how the petshop example managed its own helper functions.
+    //  参考了前任petshop，    这些辅助函数是通过研究 petshop 示例如何管理自己的辅助函数编写的。
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws ResponseException {
         try {
-            // set URL connection
+            // 设置 URL 连接
             URL reqUrl = (new URI(serverUrl + path)).toURL();
             HttpURLConnection connection = (HttpURLConnection) reqUrl.openConnection();
             connection.setRequestMethod(method);
             connection.setDoOutput(true);
 
-            // Set authToken in header
+            // Set authToken
             if (authToken != null) {
                 connection.setRequestProperty("Authorization", authToken);
             }
 
-            // turn params into a request object
+            // turn params into a request object 将参数转化为请求对象
             writeJsonBody(request, connection);
             connection.connect();
             attemptHttpRequest(connection);
@@ -109,6 +110,7 @@ public class ServerFacade {
     private void attemptHttpRequest(HttpURLConnection connection) throws ResponseException, IOException {
         int statusCode = connection.getResponseCode();
         // Ensure status code is in the 200 range. If it doesn't, we figure out what to throw.
+        //确保状态代码在 200 范围内。如果不在 200 范围内，我们就要想办法解决报错。
         if (statusCode / 100 != 2) {
             try (InputStream errorStream = connection.getErrorStream()) {
                 if (errorStream != null) {
