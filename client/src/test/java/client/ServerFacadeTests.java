@@ -1,7 +1,10 @@
 package client;
 
-import models.*;
+import chess.ChessGame.TeamColor;
 import exception.ResponseException;
+import models.AuthTokenData;
+import models.GameData;
+import models.UserData;
 import org.junit.jupiter.api.*;
 import server.Server;
 
@@ -11,78 +14,142 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerFacadeTests {
 
-    private static Server server; // Server实例，用于本地测试
-    private static int port;      // 动态分配的测试服务端口
-    private static ServerFacade serverFacade; // ServerFacade实例，直接调用测试
+    private static Server server;  // 修复为正确的类名 Server
+    private static ServerFacade facade;
 
-    /**
-     * 在所有测试运行之前启动本地测试服务器
-     * 通过动态端口分配启动以进行隔离
-     */
     @BeforeAll
     public static void init() {
-        server = new Server();
-        port = server.run(0); // 为服务器分配动态可用端口
-        System.out.println("Started test HTTP server on " + port);
+        try {
+            server = new Server();  // 初始化 Server 实例
+            var port = server.run(0);  // 启动服务器，并随机分配一个端口
+            assertTrue(port > 0, "Server failed to start with a valid port.");
+            System.out.println("Started test HTTP server on " + port);
 
-        String baseUrl = "http://localhost:" + port; // 设置服务器URL
-        serverFacade = new ServerFacade(baseUrl);   // 初始化测试的 ServerFacade
+            facade = new ServerFacade("http://localhost:" + port);
+        } catch (Exception e) {
+            fail("Failed to initialize the server: " + e.getMessage());
+        }
     }
 
-    /**
-     * 在所有测试完成后停止本地测试服务器
-     */
     @AfterAll
     static void stopServer() {
-        server.stop();
+        if (server != null) {
+            try {
+                server.stop();  // 停止服务器
+                System.out.println("Stopped HTTP server.");
+            } catch (Exception e) {
+                System.err.println("Failed to stop the server: " + e.getMessage());
+            }
+        }
     }
 
-    // ------------------ 测试方法 ------------------
+    @BeforeEach
+    public void clearDB() throws ResponseException {
+        facade.clearDatabase();
+    }
 
-    /** 测试 registerUser 方法：用户注册成功 */
     @Test
-    public void registerUser_success() throws ResponseException {
-        var user = new UserData("testUser", "testPass", "testEmail");
+    public void testRegisterUserPositive() throws ResponseException {
+        var userData = new UserData("player1", "password", "player1@email.com");
+        AuthTokenData authData = facade.registerUser(userData);
 
-        AuthTokenData authTokenData = serverFacade.registerUser(user);
-
-        assertNotNull(authTokenData); // 验证返回的数据不为空
-        assertNotNull(authTokenData.authToken()); // 验证 authToken 不为空
-        System.out.println("Register User Success: AuthToken = " + authTokenData.authToken());
+        assertNotNull(authData);
+        assertNotNull(authData.authToken());
+        assertTrue(authData.authToken().length() > 10, "Auth token should be sufficiently long.");
     }
 
-    /** 测试 loginUser 方法：用户登录成功 */
     @Test
-    public void loginUser_success() throws ResponseException {
-        var username = "testUser";
-        var password = "testPass";
-
-        AuthTokenData authTokenData = serverFacade.loginUser(username, password);
-
-        assertNotNull(authTokenData);
-        assertNotNull(authTokenData.authToken());
-        System.out.println("Login User Success: AuthToken = " + authTokenData.authToken());
+    public void testRegisterUserNegative() {
+        var userData = new UserData("", "", "");
+        assertThrows(ResponseException.class, () -> facade.registerUser(userData),
+                "Registering with empty credentials should throw an exception.");
     }
 
-    /** 测试 logoutUser 方法：用户登出成功 */
-
-
-    /** 测试 listGame 方法：成功获取游戏列表 */
-
-
-    /** 测试 createGame 方法：成功创建游戏 */
-
-
-    /** 测试 joinGame 方法：成功加入游戏 */
-
-    /** 测试 clearDatabase 方法：成功清空数据库 */
     @Test
-    public void clearDatabase_success() throws ResponseException {
-        serverFacade.clearDatabase(); // 如果正常执行，则测试通过
+    public void testLoginUserPositive() throws ResponseException {
+        var userData = new UserData("player2", "password2", "player2@email.com");
+        facade.registerUser(userData);
+        var authData = facade.loginUser("player2", "password2");
 
-        System.out.println("Clear Database Success");
+        assertNotNull(authData);
+        assertNotNull(authData.authToken());
+        assertTrue(authData.authToken().length() > 10, "Auth token should be sufficiently long.");
     }
 
-    /** 示例：测试服务器端点是否正常运行 */
+    @Test
+    public void testLoginUserNegative() {
+        assertThrows(ResponseException.class, () -> facade.loginUser("nonexistentuser", "password"),
+                "Logging in with invalid credentials should throw an exception.");
+    }
 
+    @Test
+    public void testLogoutUserPositive() throws ResponseException {
+        var userData = new UserData("player3", "password3", "player3@email.com");
+        AuthTokenData authData = facade.registerUser(userData);
+        assertDoesNotThrow(() -> facade.logoutUser(authData.authToken()));
+    }
+
+    @Test
+    public void testLogoutUserNegative() {
+        assertThrows(ResponseException.class, () -> facade.logoutUser("invalidAuthToken"),
+                "Logging out with an invalid auth token should throw an exception.");
+    }
+
+    @Test
+    public void testListGamePositive() throws ResponseException {
+        var userData = new UserData("player4", "password4", "player4@email.com");
+        AuthTokenData authData = facade.registerUser(userData);
+        Collection<GameData> games = assertDoesNotThrow(() -> facade.listGame(authData.authToken()));
+
+        assertNotNull(games);
+        assertTrue(games.isEmpty(), "Newly registered user should have no games listed.");
+    }
+
+    @Test
+    public void testListGameNegative() {
+        assertThrows(ResponseException.class, () -> facade.listGame("invalidAuthToken"),
+                "Listing games with invalid auth token should throw an exception.");
+    }
+
+    @Test
+    public void testCreateGamePositive() throws ResponseException {
+        var userData = new UserData("player5", "password5", "player5@email.com");
+        AuthTokenData authData = facade.registerUser(userData);
+        var gameID = assertDoesNotThrow(() -> facade.createGame(authData.authToken(), "TestGame"));
+
+        assertTrue(gameID > 0, "Game ID should be a positive integer.");
+    }
+
+    @Test
+    public void testCreateGameNegative() {
+        assertThrows(ResponseException.class, () -> facade.createGame("invalidAuthToken", "TestGame"),
+                "Creating a game with invalid auth token should throw an exception.");
+    }
+
+    @Test
+    public void testJoinGamePositive() throws ResponseException {
+        var userData = new UserData("player6", "password6", "player6@email.com");
+        AuthTokenData authData = facade.registerUser(userData);
+        int gameID = facade.createGame(authData.authToken(), "GameToJoin");
+
+        assertDoesNotThrow(() -> facade.joinGame(authData.authToken(), TeamColor.WHITE, gameID));
+    }
+
+    @Test
+    public void testJoinGameNegative() {
+        assertThrows(ResponseException.class, () -> facade.joinGame("invalidAuthToken", TeamColor.WHITE, 12345),
+                "Joining a game with invalid auth token should throw an exception.");
+    }
+
+    @Test
+    public void testClearDatabasePositive() {
+        assertDoesNotThrow(() -> facade.clearDatabase(), "Clearing the database should not throw any exception.");
+    }
+
+    @Test
+    public void testClearDatabaseNegative() {
+        // Assuming the server handles clearing the database with invalid cases gracefully.
+        assertDoesNotThrow(() -> facade.clearDatabase(),
+                "Clearing the database multiple times should not throw an exception.");
+    }
 }
