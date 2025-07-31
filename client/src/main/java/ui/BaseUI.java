@@ -29,7 +29,7 @@ public abstract class BaseUI implements UIState{
     public BaseUI run() throws ResponseException {
         boolean keepRunning = true;
 
-        // Trim inputs for accuracy
+        // Trim inputs for accuracy （**trim input"** 是指对用户输入的内容进行处理，移除 **字符串两端的多余空白字符**）
         while (keepRunning) {
             String input = scanner.nextLine().trim();
 
