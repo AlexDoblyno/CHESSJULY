@@ -47,6 +47,7 @@ public class ServerFacadeTests {
     public void clearDB() throws ResponseException {
         facade.clearDatabase();
     }
+// 测试注册用户功能，输入合法的用户信息，检查是否成功返回有效的授权数据。
 
     @Test
     public void testRegisterUserPositive() throws ResponseException {
@@ -57,6 +58,7 @@ public class ServerFacadeTests {
         assertNotNull(authData.authToken());
         assertTrue(authData.authToken().length() > 10, "Auth token should be sufficiently long.");
     }
+    // 测试注册用户功能，输入空的用户信息，检查是否抛出响应异常。
 
     @Test
     public void testRegisterUserNegative() {
@@ -64,6 +66,7 @@ public class ServerFacadeTests {
         assertThrows(ResponseException.class, () -> facade.registerUser(userData),
                 "Registering with empty credentials should throw an exception.");
     }
+    // 测试登录功能，注册用户后尝试登录，检查是否成功返回有效的授权数据。
 
     @Test
     public void testLoginUserPositive() throws ResponseException {
@@ -75,12 +78,14 @@ public class ServerFacadeTests {
         assertNotNull(authData.authToken());
         assertTrue(authData.authToken().length() > 10, "Auth token should be sufficiently long.");
     }
+    // 测试登录功能，尝试使用不存在的用户或错误的密码登录，检查是否抛出响应异常。
 
     @Test
     public void testLoginUserNegative() {
         assertThrows(ResponseException.class, () -> facade.loginUser("nonexistentuser", "password"),
                 "Logging in with invalid credentials should throw an exception.");
     }
+    // 测试登出功能，使用有效的授权令牌登出，检查是否不会抛出异常。
 
     @Test
     public void testLogoutUserPositive() throws ResponseException {
@@ -88,6 +93,7 @@ public class ServerFacadeTests {
         AuthTokenData authData = facade.registerUser(userData);
         assertDoesNotThrow(() -> facade.logoutUser(authData.authToken()));
     }
+    // 测试登出功能，使用无效的授权令牌登出，检查是否抛出响应异常。
 
     @Test
     public void testLogoutUserNegative() {
@@ -95,6 +101,7 @@ public class ServerFacadeTests {
                 "Logging out with an invalid auth token should throw an exception.");
     }
 
+    // 测试列出游戏功能，使用有效的授权令牌调用时，检查返回的游戏列表是否正确。
     @Test
     public void testListGamePositive() throws ResponseException {
         var userData = new UserData("player4", "password4", "player4@email.com");
@@ -105,12 +112,14 @@ public class ServerFacadeTests {
         assertTrue(games.isEmpty(), "Newly registered user should have no games listed.");
     }
 
+    // 测试列出游戏功能，使用无效的授权令牌调用时，检查是否抛出响应异常。
     @Test
     public void testListGameNegative() {
         assertThrows(ResponseException.class, () -> facade.listGame("invalidAuthToken"),
                 "Listing games with invalid auth token should throw an exception.");
     }
 
+    // 测试创建游戏功能，使用有效的授权令牌创建游戏，检查是否成功返回游戏ID。
     @Test
     public void testCreateGamePositive() throws ResponseException {
         var userData = new UserData("player5", "password5", "player5@email.com");
@@ -120,12 +129,14 @@ public class ServerFacadeTests {
         assertTrue(gameID > 0, "Game ID should be a positive integer.");
     }
 
+    // 测试创建游戏功能，使用无效的授权令牌创建游戏，检查是否抛出响应异常。
     @Test
     public void testCreateGameNegative() {
         assertThrows(ResponseException.class, () -> facade.createGame("invalidAuthToken", "TestGame"),
                 "Creating a game with invalid auth token should throw an exception.");
     }
 
+    // 测试加入游戏功能，使用有效的授权令牌和游戏ID加入游戏，检查是否不会抛出异常。
     @Test
     public void testJoinGamePositive() throws ResponseException {
         var userData = new UserData("player6", "password6", "player6@email.com");
@@ -135,17 +146,20 @@ public class ServerFacadeTests {
         assertDoesNotThrow(() -> facade.joinGame(authData.authToken(), TeamColor.WHITE, gameID));
     }
 
+    // 测试加入游戏功能，使用无效的授权令牌或无效的游戏ID加入游戏，检查是否抛出响应异常。
     @Test
     public void testJoinGameNegative() {
         assertThrows(ResponseException.class, () -> facade.joinGame("invalidAuthToken", TeamColor.WHITE, 12345),
                 "Joining a game with invalid auth token should throw an exception.");
     }
 
+    // 测试清空数据库功能，调用清理数据库的方法，检查是否不会抛出异常。
     @Test
     public void testClearDatabasePositive() {
         assertDoesNotThrow(() -> facade.clearDatabase(), "Clearing the database should not throw any exception.");
     }
 
+    // 测试清空数据库功能，重复清理空的数据库，检查是否不会抛出异常。
     @Test
     public void testClearDatabaseNegative() {
         // Assuming the server handles clearing the database with invalid cases gracefully.
