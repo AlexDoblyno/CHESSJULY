@@ -55,7 +55,7 @@ public class ChessboardDrawer {
             int displayRow = direction - row;
             boardString.append(formatCoordinates).append(displayRow).append(" ").append(clearFormatting);
 
-            // 打印期盼
+            // 打印棋盘 (回头看看是什么导致位置错误)
             for (int col = 0; col < 8; col++) {
                 ChessPosition printPosition = new ChessPosition(row, col);
                 ChessPiece printPiece = getChessGame().getBoard().getPiece(printPosition);
@@ -84,7 +84,7 @@ public class ChessboardDrawer {
         if (chessPiece == null) {
             pieceString.append(" \u2003 ");
         } else {
-            //pieceString.append(" ");
+            //pieceString.append(" "); 这里大概不需要
 
             switch (chessPiece.getPieceType()) {
                 case KING -> pieceString.append(chessPiece.getTeamColor() == ChessGame.TeamColor.WHITE ?
