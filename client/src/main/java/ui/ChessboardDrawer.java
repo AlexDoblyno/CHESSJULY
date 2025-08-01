@@ -4,6 +4,8 @@ import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
 
+import static java.lang.Math.abs;
+
 public class ChessboardDrawer {
     private ChessGame chessGame;
     private ChessGame.TeamColor perspective;
@@ -27,7 +29,7 @@ public class ChessboardDrawer {
         String clearFormatting = EscapeSequences.RESET_TEXT_BOLD_FAINT + EscapeSequences.RESET_TEXT_COLOR;
 
         // 通过当前队伍设置打印方向
-        int direction = (perspective == ChessGame.TeamColor.WHITE) ? 8 : (0);
+        int direction = (perspective == ChessGame.TeamColor.WHITE) ? 0 : (7);
 
         boardString.append(EscapeSequences.ERASE_SCREEN);
 
@@ -52,12 +54,12 @@ public class ChessboardDrawer {
         // Loop打印
         for (int row = 0; row < 8; row++) {
             // 打印1~8标签
-            int displayRow = ((perspective == ChessGame.TeamColor.WHITE) ? 8 - row : (row)) + 1;
+            int displayRow = abs(direction - row) + 1;
             boardString.append(formatCoordinates).append(displayRow).append(" ").append(clearFormatting);
 
             // 打印棋盘 (回头看看是什么导致位置错误)
             for (int col = 0; col < 8; col++) {
-                ChessPosition printPosition = new ChessPosition(displayRow - 1, col+1);
+                ChessPosition printPosition = new ChessPosition(displayRow, col+1);
                 ChessPiece printPiece = getChessGame().getBoard().getPiece(printPosition);
                 boardString.append(getSquareColor(row, col)).append(getPiece(printPiece));
                 boardString.append(EscapeSequences.RESET_TEXT_COLOR).append(EscapeSequences.RESET_BG_COLOR);
