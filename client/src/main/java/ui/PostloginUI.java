@@ -47,16 +47,27 @@ public class PostloginUI extends BaseUI {
         validateParameterLength(tokens, 3);
         String joinTeam = tokens[1];
         String gameID = tokens[2];
-        String result = client.joinGame(joinTeam,gameID);
-        ChessGame.TeamColor teamColor = (joinTeam.equalsIgnoreCase("WHITE") ?
-                ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK);
 
-        GameData gameData = client.getDataCache().getGameByIndex(Integer.parseInt(gameID));
+        // 判断游戏是否存在
+        int gameIndex = Integer.parseInt(gameID);
+        GameData gameData = client.getDataCache().getGameByIndex(gameIndex);
+        if (gameData == null) {
+            // 如果游戏数据为空，则提示玩家游戏不存在，同时直接抛出UIStateException回到本UI
+            throw new UIStateException(this, "Game not exist");
+        }
+
+        // 游戏存在时，继续执行加入操作
+        String result = client.joinGame(joinTeam, gameID);
+
+        ChessGame.TeamColor teamColor = (joinTeam.equalsIgnoreCase("WHITE")
+                ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK);
         ChessboardDrawer drawer = new ChessboardDrawer(gameData.game(), teamColor);
         GameUI gameUI = new GameUI(client, drawer, true);
 
+        // 后续直接抛出UIStateException切换到游戏界面
         throw new UIStateException(gameUI, result);
     }
+
 
     private void observe(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 2);
