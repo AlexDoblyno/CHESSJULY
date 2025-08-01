@@ -129,7 +129,7 @@ public class ChessClient {
         return drawBoard.drawBoardString();
     }
     public String quitGame() throws ResponseException {
-        //server.
+        //server
         return "Quit";
     }
     public String logout() throws ResponseException {
