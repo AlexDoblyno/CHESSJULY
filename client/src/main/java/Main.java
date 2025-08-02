@@ -18,7 +18,7 @@ public class Main {
                 currentUI = currentUI.run();
             } catch (ResponseException e) {
                 System.err.println("Fatal error! " + e.getLocalizedMessage());
-                break;
+//移除了原有的break;来让程序在书屋错误信息error后不直接终止
             }
         }
     }

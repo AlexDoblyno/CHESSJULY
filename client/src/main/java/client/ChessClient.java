@@ -85,7 +85,7 @@ public class ChessClient {
         dataCache.setGameCache(gameList);
         // Find the gameID based on our cacheData number system
         GameData gameData = dataCache.getGameByIndex(Integer.parseInt(parameters[1]));
-
+        //需要添加input错误后的报错内容
         server.joinGame(dataCache.getAuthToken(), teamColor, gameData.gameID());
 
         // Set the gameboard drawer
