@@ -239,7 +239,8 @@ public class Server {
             else {
                 throw new ServerException("bad request", 400);
             }
-            int gameID = Integer.parseInt((String) requestBody.get("gameID"));
+            double gameIDDouble = (double) requestBody.get("gameID");
+            int gameID = (int) gameIDDouble;
 
             service.joinGame(authData, teamColor, gameID);
             response.status(200);
