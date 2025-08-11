@@ -217,7 +217,11 @@ public class WebSocketServer {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid move");
             String json = new Gson().toJson(msg);
             sendMessage(json, session);
+            return;
         } catch (ServerException e) {
+            ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid move");
+            String json = new Gson().toJson(msg);
+            sendMessage(json, session);
             throw new DataAccessException(e.getMessage());
         }
             ChessGame.TeamColor opponent = (color == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
