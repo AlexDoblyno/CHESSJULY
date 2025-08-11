@@ -153,6 +153,11 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
     }
 
     @Override
+    public void updateGame(ChessGame.TeamColor Color, Integer gameID, String username) throws ServerException {
+        return;
+    }
+
+    @Override
     public int executeUpdate(String statement, Object... params) throws ServerException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement(statement)) {

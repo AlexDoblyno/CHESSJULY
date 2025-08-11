@@ -1,9 +1,6 @@
 package server;
 
-import dataaccess.DataAccessException;
-import dataaccess.SqlAuthDataAccess;
-import dataaccess.SqlGameDataAccess;
-import dataaccess.SqlUserDataAccess;
+import dataaccess.*;
 import models.AuthTokenData;
 import models.GameData;
 import models.MessageResponse;
@@ -13,11 +10,17 @@ import com.google.gson.JsonSyntaxException;
 import service.Service;
 import spark.*;
 import com.google.gson.Gson;
+import Service.*;
 
 import java.util.Collection;
 import java.util.Map;
 
 public class Server {
+
+    private RegisterService registerService;
+    private ClearService clearService;
+    private UserService userService;
+    private GameService gameService;
 
     // Create a single Gson object for all Gson operations
     private final Gson gson = new Gson();
@@ -29,7 +32,18 @@ public class Server {
     }
 
     public int run(int desiredPort) {
+        UserDataAccess userDA = new SqlUserDataAccess();
+        GameDataAccess gameDA = new SqlGameDataAccess();
+        AuthDataAccess authDA = new SqlAuthDataAccess();
+
+        registerService = new RegisterService(userDA, authDA);
+        clearService = new ClearService(gameDA, authDA, userDA);
+        userService = new UserService(userDA, authDA);
+        gameService = new GameService(userDA, gameDA, authDA);
+
         Spark.port(desiredPort);
+
+        Spark.webSocket("/ws", new WebSocketServer(authDA,gameDA,userDA));
 
         Spark.staticFiles.location("web");
 

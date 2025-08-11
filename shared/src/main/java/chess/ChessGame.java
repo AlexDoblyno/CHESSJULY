@@ -17,6 +17,7 @@ public class ChessGame {
     CastlingHistory castlingHistory;
     CheckStalemate checkStalemate;
     CheckDeterminer CheckDeterminer;
+    private boolean forceGameOver = false;
 
     public ChessGame() {
         CurrentTeam = TeamColor.WHITE;
@@ -440,6 +441,20 @@ public class ChessGame {
                 }
             }
         }
+    }
+
+    public Boolean isOver() {
+        if (isInStalemate(TeamColor.BLACK) || isInStalemate(TeamColor.WHITE)
+                || (isInCheckmate(TeamColor.BLACK) && CurrentTeam.equals(TeamColor.BLACK))
+                || (isInCheckmate(TeamColor.WHITE) && CurrentTeam.equals(TeamColor.WHITE)) || forceGameOver) {
+            return true;
+        }
+        return false;
+    }
+
+    public void setGameOverStatus(boolean targetGameOver) {
+        this.forceGameOver = targetGameOver;
+        return;
     }
 
     /**

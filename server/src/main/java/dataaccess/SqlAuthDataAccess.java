@@ -90,6 +90,12 @@ public class SqlAuthDataAccess implements AuthDataAccess, SqlAccess {
     }
 
     @Override
+    public String getUsername(String authtoken) throws ServerException {
+        AuthTokenData user = this.getAuthData(authtoken);
+        return user.username();
+    }
+
+    @Override
     public int executeUpdate(String statement, Object... params) throws ServerException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement(statement)) {

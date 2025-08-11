@@ -24,4 +24,6 @@ public interface GameDataAccess {
      * Mass deletion methods
      */
     void clearGames() throws ServerException;
+
+    void updateGame(ChessGame.TeamColor Color, Integer gameID, String username) throws ServerException;
 }

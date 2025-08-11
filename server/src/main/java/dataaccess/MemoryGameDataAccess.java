@@ -67,4 +67,23 @@ public class MemoryGameDataAccess implements GameDataAccess {
     public void clearGames() {
         gameDatabase.clear();
     }
+
+    @Override
+    public void updateGame(ChessGame.TeamColor Color, Integer gameID, String username) {
+        if (Color == ChessGame.TeamColor.BLACK) {
+            GameData gameData = this.getGameByID(gameID);
+            String whiteUsername = gameData.whiteUsername();
+            String gameName = gameData.gameName();
+            ChessGame game = gameData.game();
+            gameDatabase.remove(gameData);
+            gameDatabase.add(new GameData(gameID, whiteUsername, username, gameName, game));
+        } else {
+            GameData gameData = this.getGameByID(gameID);
+            String blackUsername = gameData.blackUsername();
+            String gameName = gameData.gameName();
+            ChessGame game = gameData.game();
+            gameDatabase.remove(gameData);
+            gameDatabase.add(new GameData(gameID, blackUsername, username, gameName, game));
+        }
+    }
 }

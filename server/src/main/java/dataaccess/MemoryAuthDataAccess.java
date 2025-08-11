@@ -36,4 +36,14 @@ public class MemoryAuthDataAccess implements AuthDataAccess{
     public void clearAuthTokens() {
         authTokenDatabase.clear();
     }
+
+    @Override
+    public String getUsername(String authtoken){
+        for (AuthTokenData token : authTokenDatabase) {
+            if (token.authToken().equals(authtoken)) {
+                return token.username();
+            }
+        }
+        return null;
+    }
 }
