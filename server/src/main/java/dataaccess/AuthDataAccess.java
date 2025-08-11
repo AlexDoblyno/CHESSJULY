@@ -17,5 +17,6 @@ public interface AuthDataAccess {
      */
     void clearAuthTokens() throws ServerException;
 
+    //find username with speific authtoken
     String getUsername(String authtoken) throws ServerException;
 }

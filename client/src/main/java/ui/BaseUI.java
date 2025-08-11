@@ -42,6 +42,7 @@ public abstract class BaseUI implements UIState{
                 System.out.print("> ");
             } catch (UIStateException e) {
                 System.out.print(e.getMessage());
+                System.out.print("> ");
                 return e.getNextState();
             }
         }
