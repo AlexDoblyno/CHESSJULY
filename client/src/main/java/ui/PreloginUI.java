@@ -37,7 +37,8 @@ public class PreloginUI extends BaseUI {
     private void register(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 4);
         String register = client.register(tokens[1], tokens[2], tokens[3]);
-        System.out.println(register);
+        if(!register.contains("uccessfully"))
+            throw new UIStateException(this, register);
 
         // Set welcome string
         System.out.println(setWelcomeString(tokens));
@@ -64,7 +65,13 @@ public class PreloginUI extends BaseUI {
      */
     private void login(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 3);
-        String login = client.login(tokens[1], tokens[2]);
+        String login = null;
+        try {
+            login = client.login(tokens[1], tokens[2]);
+        }catch (ResponseException e){
+            throw new UIStateException(this, login);
+        }
+
 
         System.out.println(login);
         System.out.println(setWelcomeString(tokens));
