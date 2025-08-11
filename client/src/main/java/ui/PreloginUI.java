@@ -50,7 +50,7 @@ public class PreloginUI extends BaseUI {
                 EscapeSequences.SET_TEXT_COLOR_BLACK + "Welcome, player " + tokens[1] +
                 "!\n" + EscapeSequences.RESET_TEXT_BOLD_FAINT + EscapeSequences.SET_TEXT_COLOR_DARK_GREY +
                 "Create or join a game! Type 'help' to see a list of commands." + EscapeSequences.RESET_BG_COLOR +
-                EscapeSequences.RESET_TEXT_COLOR;
+                EscapeSequences.RESET_TEXT_COLOR + '\n';
         return welcome;
     }
 

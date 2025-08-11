@@ -25,6 +25,7 @@ public interface GameDataAccess {
      */
     void clearGames() throws ServerException;
 
+    //Method for updating the username of a player in a game. Design for websocket
     void updateGame(ChessGame.TeamColor Color, Integer gameID, String username) throws DataAccessException;
 
     void updateChessGame(ChessGame game, Integer gameID) throws DataAccessException;
