@@ -4,6 +4,8 @@ import chess.ChessGame;
 import com.google.gson.Gson;
 import models.*;
 import exception.ResponseException;
+import ui.GameUI;
+import ui.WebSocketClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -129,5 +131,12 @@ public class ServerFacade {
                 requestBody.write(jsonRequest.getBytes());
             }
         }
+    }
+
+    public WebSocketClient createWebSocketClient(GameUI gameUI) throws Exception {
+        String uri = serverUrl+ "/ws";
+        uri = uri.replaceFirst("http", "ws");
+        WebSocketClient webSocketClient = new WebSocketClient(uri, gameUI);
+        return webSocketClient;
     }
 }

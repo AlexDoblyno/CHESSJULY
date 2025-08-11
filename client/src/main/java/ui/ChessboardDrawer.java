@@ -1,8 +1,9 @@
 package ui;
 
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
+import chess.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 import static java.lang.Math.abs;
 
@@ -23,13 +24,13 @@ public class ChessboardDrawer {
         boardString = new StringBuilder();
     }
 
-    public String drawBoardString() {
+    public String drawBoardString(Collection<ChessPosition> highlightPos) {
 
         String formatCoordinates = EscapeSequences.SET_TEXT_BOLD + EscapeSequences.SET_BG_COLOR_DARK_GREEN;
         String clearFormatting = EscapeSequences.RESET_TEXT_BOLD_FAINT + EscapeSequences.RESET_TEXT_COLOR;
 
         // 通过当前队伍设置打印方向
-        int direction = (perspective == ChessGame.TeamColor.WHITE) ? 0 : (7);
+        boolean direction = (perspective == ChessGame.TeamColor.WHITE);
 
         boardString.append(EscapeSequences.ERASE_SCREEN);
 
@@ -40,7 +41,7 @@ public class ChessboardDrawer {
         boardString.append("\n");
         boardString.append(clearFormatting);
 
-        writeChessBoard(direction, formatCoordinates, clearFormatting);
+        writeChessBoard(direction, formatCoordinates, clearFormatting, highlightPos);
 
         boardString.append(formatCoordinates);
         boardString.append(" \u2003 a  \u2003 b  \u2003 c  \u2003 d  \u2003 e  \u2003 f  \u2003 g  \u2003 h  \u2003 ");
@@ -50,22 +51,47 @@ public class ChessboardDrawer {
         return boardString.toString();
     }
 
-    private void writeChessBoard(int direction, String formatCoordinates, String clearFormatting) {
+    private void writeChessBoard(boolean direction, String formatCoordinates, String clearFormatting, Collection<ChessPosition> highlightPos) {
         // Loop打印
-        for (int row = 0; row < 8; row++) {
+        int startRow = direction ? 7 : 0;
+        int endRow = direction ? 0 : 7;
+        int rowStep = direction ? -1 : 1;
+        int startCol = direction ? 0 : 7;
+        int endCol = direction ? 7 : 0;
+        int colStep = direction ? 1 : -1;
+        for (int row = startRow; row - rowStep != endRow; row += rowStep) {
             // 打印1~8标签
-            int displayRow = abs(direction - row) + 1;
-            boardString.append(formatCoordinates).append(displayRow).append(" ").append(clearFormatting);
+
+            boardString.append(formatCoordinates).append(" ").append(row+ 1).append(" ").append(clearFormatting);
 
             // 打印棋盘 (回头看看是什么导致位置错误)
-            for (int col = 0; col < 8; col++) {
-                ChessPosition printPosition = new ChessPosition(displayRow, col+1);
-                ChessPiece printPiece = getChessGame().getBoard().getPiece(printPosition);
-                boardString.append(getSquareColor(row, col)).append(getPiece(printPiece));
-                boardString.append(EscapeSequences.RESET_TEXT_COLOR).append(EscapeSequences.RESET_BG_COLOR);
-            }
-            boardString.append(formatCoordinates).append(displayRow).append(" ").append(clearFormatting);
+            //for (int col = 0; col < 8; col++) {
+            //    ChessPosition printPosition = new ChessPosition(displayRow, col+1);
+            //    ChessPiece printPiece = getChessGame().getBoard().getPiece(printPosition);
+            //    boardString.append(getSquareColor(row, col)).append(getPiece(printPiece));
+            //    boardString.append(EscapeSequences.RESET_TEXT_COLOR).append(EscapeSequences.RESET_BG_COLOR);
+            //}
             boardString.append(EscapeSequences.RESET_TEXT_COLOR).append(EscapeSequences.RESET_BG_COLOR);
+            if (row % 2 == 0) {
+                for (int j = startCol; j - colStep != endCol; j += colStep) {
+                    String backgroundColor = getSquareColor(row+1, j);
+                    if (highlightPos != null && highlightPos.contains(new ChessPosition(row+1, j+1))) {
+                        backgroundColor = (j % 2 == 0) ? EscapeSequences.SET_BG_COLOR_DARK_GREEN :
+                                EscapeSequences.SET_BG_COLOR_GREEN;
+                    }
+                    boardString.append(backgroundColor).append(getPiece(getChessGame().getBoard().getPiece(new ChessPosition(row+1, j+1))));
+                }
+            } else {
+                for (int j = startCol; j - colStep != endCol; j += colStep) {
+                    String backgroundColor = getSquareColor(row+1, j);
+                    if (highlightPos != null && highlightPos.contains(new ChessPosition(row + 1, j + 1))) {
+                        backgroundColor = (j % 2 != 0) ? EscapeSequences.SET_BG_COLOR_DARK_GREEN :
+                                EscapeSequences.SET_BG_COLOR_GREEN;
+                    }
+                    boardString.append(backgroundColor).append(getPiece((getChessGame().getBoard().getPiece(new ChessPosition(row + 1, j + 1)))));
+                }
+            }
+            boardString.append(formatCoordinates).append(" ").append(row+ 1).append(" ").append(clearFormatting).append(EscapeSequences.RESET_BG_COLOR);
             boardString.append("\n");
         }
     }
@@ -123,4 +149,19 @@ public class ChessboardDrawer {
     public void setPerspective(ChessGame.TeamColor perspective) {
         this.perspective = perspective;
     }
+
+    public void printHighlightedMoves(ChessBoard board, ChessGame.TeamColor bottomColor, Collection<ChessMove> moves) {
+        if (moves != null) {
+            Collection<ChessPosition> positions = new ArrayList<>();
+            for (ChessMove move : moves) {
+                positions.add(move.getStartPosition());
+                positions.add(move.getEndPosition());
+            }
+
+            System.out.println(this.drawBoardString(positions));
+        } else {
+            System.out.println("No moves found");
+        }
+    }
+
 }

@@ -4,6 +4,7 @@ import chess.ChessGame;
 import client.ChessClient;
 import exception.ResponseException;
 import exception.UIStateException;
+import models.AuthTokenData;
 import models.GameData;
 
 public class PostloginUI extends BaseUI {
@@ -52,8 +53,14 @@ public class PostloginUI extends BaseUI {
                 ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK);
 
         GameData gameData = client.getDataCache().getGameByIndex(Integer.parseInt(gameID));
+        String authToken = client.getDataCache().getAuthToken();
         ChessboardDrawer drawer = new ChessboardDrawer(gameData.game(), teamColor);
-        GameUI gameUI = new GameUI(client, drawer, true);
+        GameUI gameUI = null;
+        try {
+            gameUI = new GameUI(client, drawer, true, client.getDataCache().getGameByIndex(Integer.parseInt(gameID)).gameID(), teamColor, authToken);
+        } catch (Exception e) {
+            throw new ResponseException(e.getMessage(), 500);
+        }
 
         throw new UIStateException(gameUI, result);
     }
@@ -64,8 +71,15 @@ public class PostloginUI extends BaseUI {
         String result = client.observeGame(tokens[1]);
 
         GameData gameData = client.getDataCache().getGameByIndex(gameID);
-        ChessboardDrawer drawer = new ChessboardDrawer(gameData.game(), ChessGame.TeamColor.WHITE);
-        GameUI gameUI = new GameUI(client, drawer, false);
+        String authToken = client.getDataCache().getAuthToken();
+        ChessboardDrawer drawer = new ChessboardDrawer(gameData.game(), ChessGame.TeamColor.OBSERVE);
+        GameUI gameUI = null;
+        try {
+            gameUI = new GameUI(client, drawer, false, client.getDataCache().getGameByIndex(gameID).gameID(), ChessGame.TeamColor.OBSERVE, authToken);
+        } catch (Exception e) {
+            throw new ResponseException(e.getMessage(), 500);
+        }
+
 
         //System.out.println(result);
 

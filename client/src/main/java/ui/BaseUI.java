@@ -45,6 +45,6 @@ public abstract class BaseUI implements UIState{
                 return e.getNextState();
             }
         }
-        return null;
+        return this;
     }
 }

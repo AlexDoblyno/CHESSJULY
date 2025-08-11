@@ -26,6 +26,10 @@ public class ChessClient {
         drawBoard = new ChessboardDrawer();
     }
 
+    public ServerFacade getServer() {
+        return server;
+    }
+
     public String register(String... parameters) throws ResponseException {
 
         UserData user = new UserData(parameters[0], parameters[1], parameters[2]);
@@ -92,7 +96,7 @@ public class ChessClient {
         drawBoard.setChessGame(gameData.game());
         drawBoard.setPerspective(teamColor);
 
-        StringBuilder resultString = new StringBuilder(drawBoard.drawBoardString());
+        StringBuilder resultString = new StringBuilder(drawBoard.drawBoardString(null));
         resultString.append(String.format("Game - %s\nWhite - %s%s%s\nBlack - %s%s%s",
                 EscapeSequences.SET_TEXT_COLOR_BLUE, gameData.gameName(), EscapeSequences.RESET_TEXT_COLOR,
                 EscapeSequences.SET_TEXT_COLOR_WHITE, gameData.whiteUsername(), EscapeSequences.RESET_TEXT_COLOR,
@@ -126,7 +130,7 @@ public class ChessClient {
 
         // Set the gameboard drawer
         drawBoard.setChessGame(gameData.game());
-        return drawBoard.drawBoardString();
+        return drawBoard.drawBoardString(null);
     }
     public String quitGame() throws ResponseException {
         //server
