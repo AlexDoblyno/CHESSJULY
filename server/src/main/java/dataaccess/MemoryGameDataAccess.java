@@ -69,6 +69,13 @@ public class MemoryGameDataAccess implements GameDataAccess {
     }
 
     @Override
+    public void updateChessGame(ChessGame game, Integer gameID) {
+            GameData gameData = this.getGameByID(gameID);
+            gameDatabase.remove(gameData);
+            gameDatabase.add(new GameData(gameID, gameData.whiteUsername(), gameData.blackUsername(), gameData.gameName(), game));
+    }
+
+    @Override
     public void updateGame(ChessGame.TeamColor Color, Integer gameID, String username) {
         if (Color == ChessGame.TeamColor.BLACK) {
             GameData gameData = this.getGameByID(gameID);

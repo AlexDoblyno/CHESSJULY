@@ -25,5 +25,7 @@ public interface GameDataAccess {
      */
     void clearGames() throws ServerException;
 
-    void updateGame(ChessGame.TeamColor Color, Integer gameID, String username) throws ServerException;
+    void updateGame(ChessGame.TeamColor Color, Integer gameID, String username) throws DataAccessException;
+
+    void updateChessGame(ChessGame game, Integer gameID) throws DataAccessException;
 }

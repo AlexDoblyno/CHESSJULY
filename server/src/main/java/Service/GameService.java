@@ -103,11 +103,7 @@ public class GameService {
             throw new DataAccessException("Error: Player color already taken.");
         }
 
-        try {
-            gameDAO.updateGame(playerColor, gameID, username);
-        } catch (ServerException e) {
-            throw new DataAccessException(e.getMessage());
-        }
+        gameDAO.updateGame(playerColor, gameID, username);
     }
 
     private int generateGameID() {

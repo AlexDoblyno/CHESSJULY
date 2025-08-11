@@ -50,6 +50,7 @@ public class WebSocketServer {
             try {
                 handleMakeMove(command, session);
             } catch (Exception e) {
+                e.printStackTrace();
                 System.out.println("Error: " + e.getMessage());
             }
             return;
@@ -154,6 +155,9 @@ public class WebSocketServer {
         try {
             gameData = gameDA.getGameByID(gameID);
         } catch (ServerException e) {
+            ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
+            String json = new Gson().toJson(msg);
+            sendMessage(json, session);
             throw new DataAccessException(e.getMessage());
         }
         ChessMove move = command.getMove();
@@ -166,6 +170,9 @@ public class WebSocketServer {
                 return;
             }
         } catch (ServerException e) {
+            ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid authToken");
+            String json = new Gson().toJson(msg);
+            sendMessage(json, session);
             throw new DataAccessException(e.getMessage());
         }
         try {
@@ -187,6 +194,9 @@ public class WebSocketServer {
                 return;
             }
         } catch (ServerException e) {
+            ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
+            String json = new Gson().toJson(msg);
+            sendMessage(json, session);
             throw new DataAccessException(e.getMessage());
         }
         if (gameData.game().isOver()) {
@@ -195,17 +205,27 @@ public class WebSocketServer {
             sendMessage(json, session);
             return;
         }
+        ChessGame game = null;
+        String username = "";
+        ChessGame.TeamColor color = null;
         try {
-            ChessGame game = gameData.game();
-            ChessGame.TeamColor color = game.getTeamTurn();
-            String username = authDA.getUsername(authToken);
-            ChessGame.TeamColor opponent = (game.getTeamTurn() == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
-            String opponentName = (opponent == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
+            game = gameData.game();
+            color = game.getTeamTurn();
+            username = authDA.getUsername(authToken);
             game.makeMove(move);
-            //gameDA.updateGame(gameData);
+        } catch (InvalidMoveException e) {
+            ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid move");
+            String json = new Gson().toJson(msg);
+            sendMessage(json, session);
+        } catch (ServerException e) {
+            throw new DataAccessException(e.getMessage());
+        }
+            ChessGame.TeamColor opponent = (color == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+            String opponentName = (opponent == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
+            gameDA.updateChessGame(game, gameID);
             LoadGameMessage msgLoad = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
             String json = new Gson().toJson(msgLoad);
-            broadcastMessage(json, gameID);
+            sendMessage(json, session);
 
             NotificationMessage msg = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, color +
                     " user " + username + " has made a move from " + formatPosition(move.getStartPosition()) + " to "
@@ -230,13 +250,6 @@ public class WebSocketServer {
                 broadcastMessage(json, gameID);
                 game.setGameOverStatus(true);
             }
-        } catch (InvalidMoveException e) {
-            ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid move");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
-        } catch (ServerException e) {
-            throw new DataAccessException(e.getMessage());
-        }
     }
 
     private String formatPosition(ChessPosition position) {
@@ -291,11 +304,7 @@ public class WebSocketServer {
         broadcastMessageExclude(json, gameID, session);
         if (!color.equals("observer")) {
             ChessGame.TeamColor teamColor = (color.equals("white")) ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
-            try {
-                gameDA.updateGame(teamColor, gameID, null);
-            } catch (ServerException e) {
-                throw new DataAccessException(e.getMessage());
-            }
+            gameDA.updateGame(teamColor, gameID, null);
         }
         SESSIONS.get(gameID).remove(session);
     }
@@ -358,7 +367,7 @@ public class WebSocketServer {
             String json = new Gson().toJson(msg);
             broadcastMessage(json, gameID);
             game.setGameOverStatus(true);
-            //gameDA.updateChessGame(game, gameID);
+            gameDA.updateChessGame(game, gameID);
         }
     }
 

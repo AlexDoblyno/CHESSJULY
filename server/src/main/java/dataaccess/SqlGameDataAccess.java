@@ -6,6 +6,8 @@ import com.google.gson.JsonSyntaxException;
 import models.AuthTokenData;
 import models.GameData;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -153,9 +155,38 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
     }
 
     @Override
-    public void updateGame(ChessGame.TeamColor Color, Integer gameID, String username) throws ServerException {
-        return;
+    public void updateGame(ChessGame.TeamColor playerColor, Integer gameID, String username)
+            throws DataAccessException {
+        String sql;
+        if (playerColor == ChessGame.TeamColor.BLACK) {
+            sql = "UPDATE GameData SET blackUsername = ? WHERE gameID = ?";
+        } else {
+            sql = "UPDATE GameData SET whiteUsername = ? WHERE gameID = ?";
+        }
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, username);
+            preparedStatement.setInt(2, gameID);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error updating game: " + e.getMessage());
+        }
     }
+
+    @Override
+    public void updateChessGame(ChessGame game, Integer gameID) throws DataAccessException {
+        String sql = "UPDATE GameData SET game = ? WHERE gameID = ?";
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            String chessGameJson = new Gson().toJson(game);
+            preparedStatement.setString(1, chessGameJson);
+            preparedStatement.setInt(2, gameID);
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException("Error updating game: " + e.getMessage());
+        }
+    }
+
 
     @Override
     public int executeUpdate(String statement, Object... params) throws ServerException {
