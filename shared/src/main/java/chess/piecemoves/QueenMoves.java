@@ -7,18 +7,18 @@ public class QueenMoves extends PieceMovesFar {
 
     public QueenMoves(ChessBoard GameBoard, ChessPosition StartPosition) {
         super(GameBoard, StartPosition);
-        calculateMoves();
+        calculateMoves(GameBoard);
     }
 
     @Override
-    public void calculateMoves() {
-        checkLine(-1, -1);
-        checkLine(1, 1);
-        checkLine(1, -1);
-        checkLine(-1, 1);
-        checkLine(-1, 0);
-        checkLine(1, 0);
-        checkLine(0, -1);
-        checkLine(0, 1);
+    public void calculateMoves(ChessBoard GameBoard) {
+        checkLine(GameBoard,-1, -1);
+        checkLine(GameBoard,1, 1);
+        checkLine(GameBoard,1, -1);
+        checkLine(GameBoard,-1, 1);
+        checkLine(GameBoard,-1, 0);
+        checkLine(GameBoard,1, 0);
+        checkLine(GameBoard,0, -1);
+        checkLine(GameBoard,0, 1);
     }
 }

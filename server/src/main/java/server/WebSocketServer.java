@@ -222,10 +222,10 @@ public class WebSocketServer {
         }
             ChessGame.TeamColor opponent = (color == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
             String opponentName = (opponent == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
-            gameDA.updateChessGame(game, gameID);
-            LoadGameMessage msgLoad = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
+            gameDA.updateChessGame(gameData.game(), gameID);
+            LoadGameMessage msgLoad = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData.game());
             String json = new Gson().toJson(msgLoad);
-            sendMessage(json, session);
+            broadcastMessage(json, gameID);
 
             NotificationMessage msg = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, color +
                     " user " + username + " has made a move from " + formatPosition(move.getStartPosition()) + " to "
@@ -373,6 +373,7 @@ public class WebSocketServer {
 
     @OnWebSocketError
     public void onError(Session session, Throwable throwable) {
+        throwable.printStackTrace();
         System.out.println("Error: " + throwable.getMessage());
     }
 

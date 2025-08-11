@@ -1,28 +1,25 @@
 package chess.piecemoves;
 
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessMove;
-import chess.ChessPosition;
+import chess.*;
 
 import java.util.HashSet;
 import java.util.Objects;
 
-public abstract class PieceMoves {
+public class PieceMoves {
 
-    protected ChessBoard GameBoard;
+    //protected ChessBoard GameBoard;
     protected ChessPosition StartPosition;
     protected HashSet<ChessMove> MoveList;
     protected ChessGame.TeamColor Team;
 
     public PieceMoves(ChessBoard GameBoard, ChessPosition StartPosition) {
-        this.GameBoard = GameBoard;
+        //this.GameBoard = GameBoard;
         this.StartPosition = StartPosition;
         Team = GameBoard.getPiece(StartPosition).getTeamColor();
         MoveList = new HashSet<ChessMove>();
     }
 
-    public void calculateMoves(){}
+    public void calculateMoves(ChessBoard ChessBoard){}
 
     public HashSet<ChessMove> getMoveList() {
         return MoveList;
@@ -32,18 +29,18 @@ public abstract class PieceMoves {
         return row > 0 && col > 0 && row <= 8 && col <= 8;
     }
 
-    protected boolean checkSpace(ChessPosition EndPosition) {
+    protected boolean checkSpace(ChessBoard GameBoard, ChessPosition EndPosition) {
         if (GameBoard.getPiece(EndPosition) != null) {
             if (GameBoard.getPiece(EndPosition).getTeamColor() != Team) {
                 MoveList.add(new ChessMove(StartPosition, EndPosition));
                 System.out.print("Captured piece at (" + EndPosition.getRow() + ", " + EndPosition.getColumn() + "): ");
             }
-            System.out.println("Stop checking");
+            //System.out.println("Stop checking");
             return false;
         }
         else {
             MoveList.add(new ChessMove(StartPosition, EndPosition));
-            System.out.println("Added move to null space at (" + EndPosition.getRow() + ", " + EndPosition.getColumn() + ") ");
+            //System.out.println("Added move to null space at (" + EndPosition.getRow() + ", " + EndPosition.getColumn() + ") ");
             return true;
         }
     }

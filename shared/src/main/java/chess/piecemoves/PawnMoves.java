@@ -9,13 +9,13 @@ public class PawnMoves extends PieceMoves {
     public PawnMoves(ChessBoard gameBoard, ChessPosition startPosition) {
         super(gameBoard, startPosition);
         setDirection();
-        calculateMoves();
+        calculateMoves(gameBoard);
     }
 
     @Override
-    public void calculateMoves() {
-        checkCorners();
-        checkFront();
+    public void calculateMoves(ChessBoard ChessBoard) {
+        checkCorners(ChessBoard);
+        checkFront(ChessBoard);
     }
 
     private void setDirection() {
@@ -36,7 +36,7 @@ public class PawnMoves extends PieceMoves {
         else return Team == ChessGame.TeamColor.WHITE && StartPosition.getRow() == 2;
     }
 
-    private void checkCorners() {
+    private void checkCorners(ChessBoard GameBoard) {
         int row;
         ChessPiece targetedPiece;
         ChessPosition checkPosition;
@@ -52,7 +52,7 @@ public class PawnMoves extends PieceMoves {
         }
     }
 
-    private void checkFront() {
+    private void checkFront(ChessBoard GameBoard) {
         ChessPosition checkPosition = new ChessPosition(StartPosition.getRow() + direction, StartPosition.getColumn());
         if(GameBoard.getPiece(checkPosition) == null) {
             addMove(checkPosition);

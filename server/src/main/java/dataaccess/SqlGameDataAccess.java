@@ -175,11 +175,12 @@ public class SqlGameDataAccess implements GameDataAccess, SqlAccess {
 
     @Override
     public void updateChessGame(ChessGame game, Integer gameID) throws DataAccessException {
+        Gson gson = new Gson();
         String sql = "UPDATE GameData SET game = ? WHERE gameID = ?";
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            String chessGameJson = new Gson().toJson(game);
-            preparedStatement.setString(1, chessGameJson);
+            String gameJson = gson.toJson(game);
+            preparedStatement.setString(1, gameJson);
             preparedStatement.setInt(2, gameID);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {

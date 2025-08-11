@@ -59,7 +59,7 @@ public class Server {
         Spark.exception(ServerException.class, this::handleException);
 
         //This line initializes the server and can be removed once you have a functioning endpoint
-        Spark.init();
+        //Spark.init();
 
         Spark.awaitInitialization();
         return Spark.port();
