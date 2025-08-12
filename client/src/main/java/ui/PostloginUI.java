@@ -4,7 +4,6 @@ import chess.ChessGame;
 import client.ChessClient;
 import exception.ResponseException;
 import exception.UIStateException;
-import models.AuthTokenData;
 import models.GameData;
 
 public class PostloginUI extends BaseUI {
@@ -19,14 +18,14 @@ public class PostloginUI extends BaseUI {
         String[] tokens = input.split(" ");
         switch (tokens[0].toLowerCase()) {
             case "list" -> {
-                return list();
+                return handleList();
             }
             case "create" -> {
-                return create(tokens);
+                return handleCreate(tokens);
             }
-            case "join" -> join(tokens);
-            case "observe" -> observe(tokens);
-            case "logout" -> logoutUser();
+            case "join" -> handleJoin(tokens);
+            case "observe" -> handleObserve(tokens);
+            case "logout" -> handleLogout();
             default -> {
                 return displayHelpInfo();
             }
@@ -34,39 +33,35 @@ public class PostloginUI extends BaseUI {
         return null;
     }
 
-    private String list() throws ResponseException {
+    private String handleList() throws ResponseException {
         return client.listGames();
     }
 
-    private String create(String[] tokens) throws ResponseException {
+    private String handleCreate(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 2);
         String gameName = tokens[1];
-        String result = client.createGame(client.getDataCache().getAuthToken(), gameName);
+        String authToken = client.getDataCache().getAuthToken();
+        String result = client.createGame(authToken, gameName);
         return result;
     }
 
-    private void join(String[] tokens) throws ResponseException {
+    private void handleJoin(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 3);
         String joinTeam = tokens[1];
         String gameID = tokens[2];
-        String result = client.joinGame(joinTeam,gameID);
-        ChessGame.TeamColor teamColor = (joinTeam.equalsIgnoreCase("WHITE") ?
-                ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK);
+        String result = client.joinGame(joinTeam, gameID);
+        ChessGame.TeamColor teamColor = parseTeamColor(joinTeam);
 
         GameData gameData = client.getDataCache().getGameByIndex(Integer.parseInt(gameID));
         String authToken = client.getDataCache().getAuthToken();
         ChessboardDrawer drawer = new ChessboardDrawer(gameData.game(), teamColor);
-        GameUI gameUI = null;
-        try {
-            gameUI = new GameUI(client, drawer, true, client.getDataCache().getGameByIndex(Integer.parseInt(gameID)).gameID(), teamColor, authToken);
-        } catch (Exception e) {
-            throw new ResponseException(e.getMessage(), 500);
-        }
+
+        GameUI gameUI = createGameUI(drawer, true, gameData.gameID(), teamColor, authToken);
 
         throw new UIStateException(gameUI, result);
     }
 
-    private void observe(String[] tokens) throws ResponseException {
+    private void handleObserve(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 2);
         int gameID = Integer.parseInt(tokens[1]);
         String result = client.observeGame(tokens[1]);
@@ -74,23 +69,30 @@ public class PostloginUI extends BaseUI {
         GameData gameData = client.getDataCache().getGameByIndex(gameID);
         String authToken = client.getDataCache().getAuthToken();
         ChessboardDrawer drawer = new ChessboardDrawer(gameData.game(), ChessGame.TeamColor.OBSERVE);
-        GameUI gameUI = null;
-        try {
-            gameUI = new GameUI(client, drawer, false, client.getDataCache().getGameByIndex(gameID).gameID(), ChessGame.TeamColor.OBSERVE, authToken);
-        } catch (Exception e) {
-            throw new ResponseException(e.getMessage(), 500);
-        }
 
-
-        //System.out.println(result);
+        GameUI gameUI = createGameUI(drawer, false, gameData.gameID(), ChessGame.TeamColor.OBSERVE, authToken);
 
         throw new UIStateException(gameUI, result);
     }
 
-    private void logoutUser() throws ResponseException {
+    private void handleLogout() throws ResponseException {
         String result = client.logout();
         client.getDataCache().setAuthToken(null);
         throw new UIStateException(new PreloginUI(client), result);
+    }
+
+    private ChessGame.TeamColor parseTeamColor(String teamString) {
+        return (teamString.equalsIgnoreCase("WHITE") ?
+                ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK);
+    }
+
+    private GameUI createGameUI(ChessboardDrawer drawer, boolean isPlayer, int gameID,
+                                ChessGame.TeamColor teamColor, String authToken) throws ResponseException {
+        try {
+            return new GameUI(client, drawer, isPlayer, gameID, teamColor, authToken);
+        } catch (Exception e) {
+            throw new ResponseException(e.getMessage(), 500);
+        }
     }
 
     @Override

@@ -1,18 +1,16 @@
 package ui;
-import websocket.commands.MakeMoveCommands;
+
 import chess.*;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
 import client.ChessClient;
 import exception.ResponseException;
 import exception.UIStateException;
+import websocket.commands.MakeMoveCommands;
 import websocket.commands.UserGameCommand;
 
 import java.util.Scanner;
 
 public class GameUI extends BaseUI {
-    private Boolean isPlayer;
+    private final Boolean isPlayer;
     private ChessboardDrawer drawer;
     private ChessGame chessGame;
     private final ChessGame.TeamColor color;
@@ -42,10 +40,10 @@ public class GameUI extends BaseUI {
     public String handler(String input) throws ResponseException {
         String[] tokens = input.split(" ");
         switch(tokens[0].toLowerCase()) {
-            case "quit" -> quitGame();
-            case "highlight"->highlightLegalMoves();
-            case "move" -> makeMove();
-            case "leave" -> leaveGame();
+            case "quit" -> handleQuit();
+            case "highlight" -> handleHighlightLegalMoves();
+            case "move" -> handleMakeMove();
+            case "leave" -> handleLeaveGame();
             case "help" -> {
                 return displayHelpInfo();
             }
@@ -56,22 +54,22 @@ public class GameUI extends BaseUI {
         return null;
     }
 
-    private void quitGame() throws ResponseException {
-        int gameID = client.getDataCache().getCurrentGameID()+1;
+    private void handleQuit() throws ResponseException {
+        int gameID = client.getDataCache().getCurrentGameID() + 1;
         String gameName = client.getDataCache().getGameByIndex(gameID).gameName();
 
         client.getDataCache().setCurrentGameID(0);
-        String returnStatement = "Left game " + gameName + "successfully.\n";
+        String returnStatement = "Left game " + gameName + " successfully.\n";
         client.logout();
         throw new UIStateException(new PostloginUI(client), returnStatement);
     }
 
-    private Boolean leaveGame() throws UIStateException {
+    private void handleLeaveGame() throws UIStateException {
         System.out.print("Are you sure you want to leave? (yes/no): ");
         String confirmation = scanner.nextLine().trim().toLowerCase();
         if (confirmation.equals("yes") || confirmation.equals("y")) {
-            UserGameCommand resignCommand = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
-            webSocketClient.sendMessage(resignCommand);
+            UserGameCommand leaveCommand = new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID);
+            webSocketClient.sendMessage(leaveCommand);
             System.out.println("You have left the game.");
             throw new UIStateException(new PostloginUI(client), "");
         } else {
@@ -79,21 +77,20 @@ public class GameUI extends BaseUI {
             throw new UIStateException(this, "");
         }
     }
-//
 
     @Override
     public String displayHelpInfo() {
         return """
-    --- GAME COMMANDS ---
-    Type a command to get the corresponding action.
-    - highlight | Highlight legal moves.
-    = move      | Make a move.
-    = leave     | Leave the current game.
-    - quit      | Leave your current game.
-    - help      | Display this help menu.
-    """;
+                --- GAME COMMANDS ---
+                Type a command to get the corresponding action.
+                - highlight | Highlight legal moves.
+                - move      | Make a move.
+                - leave     | Leave the current game.
+                - quit      | Leave your current game.
+                - help      | Display this help menu.
+                """;
     }
-//-------------------------//
+
     private ChessPosition parsePosition(String input) {
         if (input.length() == 2) {
             int col = input.charAt(0) - 'a' + 1;
@@ -110,11 +107,7 @@ public class GameUI extends BaseUI {
         }
     }
 
-
-
-
-
-    private void highlightLegalMoves() {
+    private void handleHighlightLegalMoves() {
         System.out.print("Enter the position of the piece to highlight (e.g., e2): ");
         ChessPosition position = parsePosition(scanner.nextLine().trim());
         if (position != null) {
@@ -125,7 +118,7 @@ public class GameUI extends BaseUI {
         }
     }
 
-    private void makeMove() {
+    private void handleMakeMove() {
         if (this.chessGame.isOver()) {
             System.out.println("The game is over.");
             return;
@@ -150,32 +143,14 @@ public class GameUI extends BaseUI {
             return;
         }
 
-        // Check if it's a pawn upgrade move
-        ChessPiece.PieceType promotion = null;
-        assert piece != null;
-        if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
-            if (((color == ChessGame.TeamColor.BLACK) && (end.getRow() == 1))
-                    || ((color == ChessGame.TeamColor.WHITE) && (end.getRow() == 8))) {
-                System.out.print("Enter promotion piece (e.g., queen): ");
-                switch (scanner.nextLine().trim()) {
-                    case "queen":
-                        promotion = ChessPiece.PieceType.QUEEN;
-                        break;
-                    case "rook":
-                        promotion = ChessPiece.PieceType.ROOK;
-                        break;
-                    case "bishop":
-                        promotion = ChessPiece.PieceType.BISHOP;
-                        break;
-                    case "knight":
-                        promotion = ChessPiece.PieceType.KNIGHT;
-                        break;
-                    default:
-                        System.out.println("Invalid promotion piece");
-                        makeMove();
-                }
-            }
+        // Check if it's a pawn promotion move
+        ChessPiece.PieceType promotion = getPromotionPieceIfNecessary(piece, end);
+        if (promotion == null && piece.getPieceType() == ChessPiece.PieceType.PAWN) {
+            // Invalid promotion input, restart the move process
+            handleMakeMove();
+            return;
         }
+
         ChessMove move = new ChessMove(start, end, promotion);
         try {
             chessGame.makeMove(move);
@@ -195,11 +170,35 @@ public class GameUI extends BaseUI {
         System.out.println(drawer.drawBoardString(null));
     }
 
+    private ChessPiece.PieceType getPromotionPieceIfNecessary(ChessPiece piece, ChessPosition end) {
+        ChessPiece.PieceType promotion = null;
+        if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
+            if (((color == ChessGame.TeamColor.BLACK) && (end.getRow() == 1))
+                    || ((color == ChessGame.TeamColor.WHITE) && (end.getRow() == 8))) {
+                System.out.print("Enter promotion piece (e.g., queen): ");
+                promotion = parsePromotionPiece(scanner.nextLine().trim());
+            }
+        }
+        return promotion;
+    }
+
+    private ChessPiece.PieceType parsePromotionPiece(String input) {
+        return switch (input.trim()) {
+            case "queen" -> ChessPiece.PieceType.QUEEN;
+            case "rook" -> ChessPiece.PieceType.ROOK;
+            case "bishop" -> ChessPiece.PieceType.BISHOP;
+            case "knight" -> ChessPiece.PieceType.KNIGHT;
+            default -> {
+                System.out.println("Invalid promotion piece");
+                yield null;
+            }
+        };
+    }
+
     public void loadGame(ChessGame game){
         this.chessGame = game;
         ChessGame.TeamColor bottom = (color == null) ? ChessGame.TeamColor.WHITE : color;
         drawer.printHighlightedMoves(chessGame.getBoard(), bottom, null);
         System.out.println("The game has been updated.");
     }
-
 }
