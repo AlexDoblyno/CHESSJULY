@@ -23,38 +23,74 @@ import websocket.messages.ServerMessage;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * This WebSocketServer handles incoming WebSocket requests:
+ * <ul>
+ *     <li>CONNECT / LEAVE / RESIGN commands (UserGameCommand)</li>
+ *     <li>MAKE_MOVE commands (MakeMoveCommands)</li>
+ * </ul>
+ *
+ * <p>部分核心思路参考：
+ * <a href="https://docs.oracle.com/javaee/7/api/javax/websocket/OnMessage.html">Java WebSocket OnMessage官方文档</a>
+ */
 @WebSocket
 public class WebSocketServer {
-    private UserDataAccess userDA;
-    private GameDataAccess gameDA;
-    private AuthDataAccess authDA;
+
+    private final UserDataAccess userDA;
+    private final GameDataAccess gameDA;
+    private final AuthDataAccess authDA;
+
+    /**
+     * 每个游戏ID和对应的WebSocket会话映射表
+     */
     private static final Map<Integer, List<Session>> SESSIONS = new HashMap<>();
 
+    /**
+     * 构造函数，注入数据访问对象
+     *
+     * @param authDA Auth数据访问接口
+     * @param gameDA 游戏数据访问接口
+     * @param userDA 用户数据访问接口
+     */
     public WebSocketServer(AuthDataAccess authDA, GameDataAccess gameDA, UserDataAccess userDA) {
         this.userDA = userDA;
         this.gameDA = gameDA;
         this.authDA = authDA;
     }
 
+    /**
+     * WebSocket建立连接时调用
+     *
+     * @param session 新连接的会话
+     */
     @OnWebSocketConnect
     public void onOpen(Session session) {
         System.out.println("New connection");
     }
 
+    /**
+     * 收到消息时执行，根据消息做相应处理
+     *
+     * @param session 当前WebSocket会话
+     * @param message 接收到的json文本
+     */
     @OnWebSocketMessage
     public void onMessage(Session session, String message) {
         System.out.println("New message: " + message);
-        // Deserialize message into UserGameCommand
+
+        // 如果消息表示移动棋子
         if (message.contains("MAKE_MOVE")) {
-            MakeMoveCommands command = new Gson().fromJson(message, MakeMoveCommands.class);
+            MakeMoveCommands moveCommand = new Gson().fromJson(message, MakeMoveCommands.class);
             try {
-                handleMakeMove(command, session);
+                handleMakeMove(moveCommand, session);
             } catch (Exception e) {
                 e.printStackTrace();
                 System.out.println("Error: " + e.getMessage());
             }
             return;
         }
+
+        // 否则为UserGameCommand类型
         UserGameCommand command = parseCommand(message);
         try {
             handleCommand(command, session);
@@ -67,68 +103,65 @@ public class WebSocketServer {
         return new Gson().fromJson(message, UserGameCommand.class);
     }
 
+    /**
+     * 判断并执行具体的CONNECT、LEAVE、RESIGN三种命令
+     */
     private void handleCommand(UserGameCommand command, Session session) throws DataAccessException {
-        // Process CONNECT, MAKE_MOVE, LEAVE, and RESIGN commands
         switch (command.getCommandType()) {
-            case CONNECT:
-                handleConnect(command, session);
-                break;
-            case LEAVE:
-                handleLeave(command, session);
-                break;
-            case RESIGN:
-                handleResign(command, session);
-                break;
-            default:
-                System.out.println("Unknown command type: " + command.getCommandType());
-                break;
+            case CONNECT -> handleConnect(command, session);
+            case LEAVE -> handleLeave(command, session);
+            case RESIGN -> handleResign(command, session);
+            default -> System.out.println("Unknown command type: " + command.getCommandType());
         }
     }
 
+    /**
+     * 处理CONNECT命令，连接到游戏并通知其他玩家
+     */
     private void handleConnect(UserGameCommand command, Session session) throws DataAccessException {
-        // Load game, notify players, etc.
         Integer gameID = command.getGameID();
         String authToken = command.getAuthToken();
-        String username = null;
+        String username;
+
+        // 验证用户令牌
         try {
             username = authDA.getUsername(authToken);
         } catch (ServerException e) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid authToken");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             throw new DataAccessException(e.getMessage());
         }
-        GameData gameData = null;
+
+        // 获取游戏数据
+        GameData gameData;
         try {
             gameData = gameDA.getGameByID(gameID);
         } catch (ServerException e) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             throw new DataAccessException(e.getMessage());
         }
 
+        // 双重判断游戏与玩家有效性
         try {
             if (authDA.getUsername(authToken) == null) {
-                System.out.println("User not found.");
                 ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid authToken");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
+                sendMessage(new Gson().toJson(msg), session);
                 return;
             }
             if (gameDA.getGameByID(gameID) == null) {
-                System.out.println("Game not found.");
                 ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
+                sendMessage(new Gson().toJson(msg), session);
                 return;
             }
         } catch (ServerException e) {
             throw new DataAccessException(e.getMessage());
         }
 
+        // 登记Session
         SESSIONS.computeIfAbsent(gameID, k -> new ArrayList<>()).add(session);
 
+        // 判断颜色
         String color = "observer";
         if (Objects.equals(gameData.whiteUsername(), username)) {
             color = "white";
@@ -136,137 +169,171 @@ public class WebSocketServer {
             color = "black";
         }
 
-        NotificationMessage notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, username +
-                " has joined the game as " + color);
-        String json = new Gson().toJson(notification);
-        broadcastMessageExclude(json, gameID, session);
+        // 通知其他玩家
+        NotificationMessage notification = new NotificationMessage(
+                ServerMessage.ServerMessageType.NOTIFICATION,
+                username + " has joined the game as " + color);
+        broadcastMessageExclude(new Gson().toJson(notification), gameID, session);
 
+        // 给当前连接玩家发送游戏信息
         LoadGameMessage gameMessage = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData.game());
-        String jsonGame = new Gson().toJson(gameMessage);
-        sendMessage(jsonGame, session);
+        sendMessage(new Gson().toJson(gameMessage), session);
     }
 
-    private void handleMakeMove(MakeMoveCommands command, Session session)
-            throws DataAccessException {
-        // Validate move, update game, notify players
+    /**
+     * 处理MAKE_MOVE命令，执行走棋并通知其他玩家
+     */
+    private void handleMakeMove(MakeMoveCommands command, Session session) throws DataAccessException {
         Integer gameID = command.getGameID();
         String authToken = command.getAuthToken();
-        GameData gameData = null;
+
+        // 获取游戏数据
+        GameData gameData;
         try {
             gameData = gameDA.getGameByID(gameID);
         } catch (ServerException e) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             throw new DataAccessException(e.getMessage());
         }
         ChessMove move = command.getMove();
 
+        // 验证AuthToken存在
         try {
             if (authDA.getAuthData(authToken) == null) {
                 ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid authToken");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
+                sendMessage(new Gson().toJson(msg), session);
                 return;
             }
         } catch (ServerException e) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid authToken");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             throw new DataAccessException(e.getMessage());
         }
+
+        // 验证是否是当前玩家的回合
         try {
-            if (!(authDA.getUsername(authToken).equals(gameData.blackUsername()) && gameData.game().getTeamTurn() == ChessGame.TeamColor.BLACK)
-                    && !(authDA.getUsername(authToken).equals(gameData.whiteUsername()) && gameData.game().getTeamTurn() == ChessGame.TeamColor.WHITE)) {
+            String tokenUser = authDA.getUsername(authToken);
+            if (!isCorrectTurn(tokenUser, gameData)) {
                 ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "wrong turn");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
+                sendMessage(new Gson().toJson(msg), session);
                 return;
             }
         } catch (ServerException e) {
             throw new DataAccessException(e.getMessage());
         }
+
+        // 验证游戏是否存在
         try {
             if (gameDA.getGameByID(gameID) == null) {
                 ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
+                sendMessage(new Gson().toJson(msg), session);
                 return;
             }
         } catch (ServerException e) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             throw new DataAccessException(e.getMessage());
         }
+
+        // 检查游戏是否已经结束
         if (gameData.game().isOver()) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game is over");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             return;
         }
-        ChessGame game = null;
-        String username = "";
-        ChessGame.TeamColor color = null;
+
+        // 进行走棋操作
+        ChessGame game = gameData.game();
+        ChessGame.TeamColor currentColor = game.getTeamTurn();
+        String username;
         try {
-            game = gameData.game();
-            color = game.getTeamTurn();
             username = authDA.getUsername(authToken);
             game.makeMove(move);
-        } catch (InvalidMoveException e) {
+        } catch (InvalidMoveException ivm) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid move");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             return;
         } catch (ServerException e) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid move");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             throw new DataAccessException(e.getMessage());
         }
-            ChessGame.TeamColor opponent = (color == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
-            String opponentName = (opponent == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
-            gameDA.updateChessGame(gameData.game(), gameID);
-            LoadGameMessage msgLoad = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData.game());
-            String json = new Gson().toJson(msgLoad);
-            broadcastMessage(json, gameID);
 
-            NotificationMessage msg = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, color +
-                    " user " + username + " has made a move from " + formatPosition(move.getStartPosition()) + " to "
-                    + formatPosition(move.getEndPosition()));
-            json = new Gson().toJson(msg);
-            broadcastMessageExclude(json, gameID, session);
-            if (game.isInCheckmate(opponent)) {
-                msg = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, opponent +
-                        " user " + opponentName + " is in checkmate, " + color + " user " + username + " wins");
-                json = new Gson().toJson(msg);
-                broadcastMessage(json, gameID);
-            } else if (game.isInCheck(opponent)) {
-                msg = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, opponent +
-                        " user " + opponentName + " is in check");
-                json = new Gson().toJson(msg);
-                broadcastMessage(json, gameID);
-                game.setGameOverStatus(true);
-            } else if (game.isInStalemate(opponent) || game.isInStalemate(color)) {
-                msg = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, "game ends in " +
-                        "stalemate");
-                json = new Gson().toJson(msg);
-                broadcastMessage(json, gameID);
-                game.setGameOverStatus(true);
-            }
+        // 持久化更新
+        try {
+            gameDA.updateChessGame(game, gameID);
+        } catch (DataAccessException e) {
+            // 根据需求可在此处处理异常或继续抛出
+            throw e;
+        }
+
+        // 广播新的游戏状态
+        LoadGameMessage msgLoad = new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, game);
+        broadcastMessage(new Gson().toJson(msgLoad), gameID);
+
+        // 通知其他玩家当前走棋
+        NotificationMessage moveMsg = new NotificationMessage(
+                ServerMessage.ServerMessageType.NOTIFICATION,
+                currentColor + " user " + username + " has made a move from " +
+                        formatPosition(move.getStartPosition()) + " to " + formatPosition(move.getEndPosition()));
+        broadcastMessageExclude(new Gson().toJson(moveMsg), gameID, session);
+
+        // 检查是否将死/将军/僵局
+        checkGameEndingState(game, gameID, currentColor, username, session, gameData);
     }
 
-    private String formatPosition(ChessPosition position) {
+    private boolean isCorrectTurn(String tokenUser, GameData gameData) {
+        ChessGame.TeamColor teamTurn = gameData.game().getTeamTurn();
+        return (tokenUser.equals(gameData.blackUsername()) && teamTurn == ChessGame.TeamColor.BLACK)
+                || (tokenUser.equals(gameData.whiteUsername()) && teamTurn == ChessGame.TeamColor.WHITE);
+    }
+
+    // 检查游戏状态是否终盘，如checkmate或stalemate
+    private void checkGameEndingState(ChessGame game, int gameID, ChessGame.TeamColor color,
+                                      String currentUser, Session session, GameData gameData) {
+        ChessGame.TeamColor opponent = (color == ChessGame.TeamColor.WHITE)
+                ? ChessGame.TeamColor.BLACK
+                : ChessGame.TeamColor.WHITE;
+        String opponentName = (opponent == ChessGame.TeamColor.WHITE)
+                ? gameData.whiteUsername()
+                : gameData.blackUsername();
+
+        if (game.isInCheckmate(opponent)) {
+            NotificationMessage note = new NotificationMessage(
+                    ServerMessage.ServerMessageType.NOTIFICATION,
+                    opponent + " user " + opponentName + " is in checkmate, "
+                            + color + " user " + currentUser + " wins");
+            broadcastMessage(new Gson().toJson(note), gameID);
+        } else if (game.isInCheck(opponent)) {
+            NotificationMessage note = new NotificationMessage(
+                    ServerMessage.ServerMessageType.NOTIFICATION,
+                    opponent + " user " + opponentName + " is in check");
+            broadcastMessage(new Gson().toJson(note), gameID);
+            game.setGameOverStatus(true);
+        } else if (game.isInStalemate(opponent) || game.isInStalemate(color)) {
+            NotificationMessage note = new NotificationMessage(
+                    ServerMessage.ServerMessageType.NOTIFICATION,
+                    "game ends in stalemate");
+            broadcastMessage(new Gson().toJson(note), gameID);
+            game.setGameOverStatus(true);
+        }
+    }
+
+    private int formatPosition(ChessPosition position) {
         char col = (char) ('a' + position.getColumn() - 1);
-        return col + String.valueOf(position.getRow());
+        return col + position.getRow();
     }
 
+    /**
+     * 处理LEAVE命令，玩家离开游戏
+     */
     private void handleLeave(UserGameCommand command, Session session) throws DataAccessException {
-        // Notify other players and update the game state
         Integer gameID = command.getGameID();
         String authToken = command.getAuthToken();
-        String username = null;
-        GameData gameData = null;
+        String username;
+        GameData gameData;
+
         try {
             username = authDA.getUsername(authToken);
             gameData = gameDA.getGameByID(gameID);
@@ -274,27 +341,29 @@ public class WebSocketServer {
             throw new DataAccessException(e.getMessage());
         }
 
+        // 验证authToken有效性
         try {
             if (authDA.getAuthData(authToken) == null) {
                 ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid authToken");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
-                return;
-            }
-        } catch (ServerException e) {
-            throw new DataAccessException(e.getMessage());
-        }
-        try {
-            if (gameDA.getGameByID(gameID) == null) {
-                ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
+                sendMessage(new Gson().toJson(msg), session);
                 return;
             }
         } catch (ServerException e) {
             throw new DataAccessException(e.getMessage());
         }
 
+        // 验证游戏是否存在
+        try {
+            if (gameDA.getGameByID(gameID) == null) {
+                ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
+                sendMessage(new Gson().toJson(msg), session);
+                return;
+            }
+        } catch (ServerException e) {
+            throw new DataAccessException(e.getMessage());
+        }
+
+        // 判断角色
         String color = "observer";
         if (Objects.equals(gameData.whiteUsername(), username)) {
             color = "white";
@@ -302,112 +371,142 @@ public class WebSocketServer {
             color = "black";
         }
 
-        NotificationMessage msg = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION,
+        // 通知离开
+        NotificationMessage note = new NotificationMessage(
+                ServerMessage.ServerMessageType.NOTIFICATION,
                 color + " user " + username + " has left the game");
-        String json = new Gson().toJson(msg);
-        broadcastMessageExclude(json, gameID, session);
-        if (!color.equals("observer")) {
-            ChessGame.TeamColor teamColor = (color.equals("white")) ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
+        broadcastMessageExclude(new Gson().toJson(note), gameID, session);
+
+        // 如果是玩家，则将该玩家置空
+        if (!"observer".equals(color)) {
+            ChessGame.TeamColor teamColor = color.equals("white") ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
             gameDA.updateGame(teamColor, gameID, null);
         }
-        SESSIONS.get(gameID).remove(session);
+
+        SESSIONS.getOrDefault(gameID, Collections.emptyList()).remove(session);
     }
 
+    /**
+     * 处理RESIGN命令，玩家认输
+     */
     private void handleResign(UserGameCommand command, Session session) throws DataAccessException {
-        // End game and notify all connected clients
         Integer gameID = command.getGameID();
         String authToken = command.getAuthToken();
-        String username = null;
+        String username;
+
+        // 获取玩家与游戏
         try {
             username = authDA.getUsername(authToken);
         } catch (ServerException e) {
             throw new DataAccessException(e.getMessage());
         }
-        GameData gameData = null;
+        GameData gameData;
         try {
             gameData = gameDA.getGameByID(gameID);
         } catch (ServerException e) {
             throw new DataAccessException(e.getMessage());
         }
 
-        if (!username.equals(gameData.blackUsername())
-                && !username.equals(gameData.whiteUsername())) {
+        // 检查是否是对局中的玩家
+        if (!username.equals(gameData.blackUsername()) && !username.equals(gameData.whiteUsername())) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "wrong turn");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
             return;
         }
+
+        // 验证authToken与游戏有效性
         try {
             if (authDA.getUsername(authToken) == null) {
                 ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "invalid authToken");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
+                sendMessage(new Gson().toJson(msg), session);
                 return;
             }
-        } catch (ServerException e) {
-            throw new DataAccessException(e.getMessage());
-        }
-        try {
             if (gameDA.getGameByID(gameID) == null) {
                 ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game not found");
-                String json = new Gson().toJson(msg);
-                sendMessage(json, session);
+                sendMessage(new Gson().toJson(msg), session);
                 return;
             }
         } catch (ServerException e) {
             throw new DataAccessException(e.getMessage());
         }
+
+        // 若游戏已结束
         if (gameData.game().isOver()) {
             ErrorMessage msg = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, "game is over");
-            String json = new Gson().toJson(msg);
-            sendMessage(json, session);
+            sendMessage(new Gson().toJson(msg), session);
         } else {
+            // 正式执行认输
             ChessGame game = gameData.game();
-            ChessGame.TeamColor color = (username.equals(gameData.whiteUsername())) ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
-            ChessGame.TeamColor opponent = (color == ChessGame.TeamColor.WHITE) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
-            String opponentName = (opponent == ChessGame.TeamColor.WHITE) ? gameData.whiteUsername() : gameData.blackUsername();
-            NotificationMessage msg = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, color
-                    + " user " + username + " has resigned, " + opponent + " user " + opponentName + " wins");
-            String json = new Gson().toJson(msg);
-            broadcastMessage(json, gameID);
+            ChessGame.TeamColor color = (username.equals(gameData.whiteUsername()))
+                    ? ChessGame.TeamColor.WHITE
+                    : ChessGame.TeamColor.BLACK;
+            ChessGame.TeamColor opponent = (color == ChessGame.TeamColor.WHITE)
+                    ? ChessGame.TeamColor.BLACK
+                    : ChessGame.TeamColor.WHITE;
+            String opponentName = (opponent == ChessGame.TeamColor.WHITE)
+                    ? gameData.whiteUsername()
+                    : gameData.blackUsername();
+
+            NotificationMessage note = new NotificationMessage(
+                    ServerMessage.ServerMessageType.NOTIFICATION,
+                    color + " user " + username + " has resigned, "
+                            + opponent + " user " + opponentName + " wins");
+            broadcastMessage(new Gson().toJson(note), gameID);
+
+            // 标记游戏结束并更新数据库
             game.setGameOverStatus(true);
             gameDA.updateChessGame(game, gameID);
         }
     }
 
+    /**
+     * WebSocket异常监听
+     */
     @OnWebSocketError
     public void onError(Session session, Throwable throwable) {
         throwable.printStackTrace();
         System.out.println("Error: " + throwable.getMessage());
     }
 
+    /**
+     * WebSocket关闭连接时
+     */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         System.out.println("Connection closed, reason: " + reason);
     }
 
+    /**
+     * 广播消息给指定游戏所有在线玩家
+     */
     private void broadcastMessage(String msg, Integer gameID) {
         List<Session> gameSessions = SESSIONS.get(gameID);
         if (gameSessions != null) {
-            for (Session session : gameSessions) {
-                if (session.isOpen()) {
-                    sendMessage(msg, session);
+            for (Session s : gameSessions) {
+                if (s.isOpen()) {
+                    sendMessage(msg, s);
                 }
             }
         }
     }
 
+    /**
+     * 广播消息给游戏中除特定会话外的所有在线玩家
+     */
     private void broadcastMessageExclude(String msg, Integer gameID, Session exclude) {
         List<Session> gameSessions = SESSIONS.get(gameID);
         if (gameSessions != null) {
-            for (Session session : gameSessions) {
-                if (session != exclude && session.isOpen()) {
-                    sendMessage(msg, session);
+            for (Session s : gameSessions) {
+                if (!s.equals(exclude) && s.isOpen()) {
+                    sendMessage(msg, s);
                 }
             }
         }
     }
 
+    /**
+     * 发送消息给特定会话
+     */
     private void sendMessage(String message, Session session) {
         try {
             session.getRemote().sendString(message);
