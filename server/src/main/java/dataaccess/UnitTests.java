@@ -1,13 +1,13 @@
 package dataaccess;
 
+import chess.ChessGame;
 import models.GameData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-import chess.ChessGame;
-
 import java.util.Collection;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class UnitTests {
     private MemoryGameDataAccess memoryGameDataAccess;
@@ -34,7 +34,7 @@ class UnitTests {
     }
 
     @Test
-    void testGetGameByID_Negative() {
+    void testGetGameByIDNegative() {
         // Act
         GameData retrievedGame = memoryGameDataAccess.getGameByID(99);
 
@@ -43,7 +43,7 @@ class UnitTests {
     }
 
     @Test
-    void testGetGameByName_Positive() {
+    void testGetGameByNamePositive() {
         // Arrange
         ChessGame chessGame = new ChessGame();
         GameData gameData = new GameData(2, null, null, "TestGame2", chessGame);
@@ -59,7 +59,7 @@ class UnitTests {
     }
 
     @Test
-    void testGetGameByName_Negative() {
+    void testGetGameByNameNegative() {
         // Act
         GameData retrievedGame = memoryGameDataAccess.getGameByName("NonExistentGame");
 
@@ -69,7 +69,7 @@ class UnitTests {
 
 
     @Test
-    void testGetGameList_Positive() {
+    void testGetGameListPositive() {
         // Arrange
         ChessGame chessGame1 = new ChessGame();
         GameData gameData1 = new GameData(5, null, null, "TestGame5", chessGame1);
@@ -87,7 +87,7 @@ class UnitTests {
     }
 
     @Test
-    void testClearGames_Positive() {
+    void testClearGamesPositive() {
         // Arrange
         ChessGame chessGame = new ChessGame();
         GameData gameData = new GameData(7, null, null, "TestGame7", chessGame);
@@ -103,7 +103,7 @@ class UnitTests {
     }
 
     @Test
-    void testCreateGame_DuplicateGameID() {
+    void testCreateGameDuplicateGameID() {
         // Arrange
         ChessGame chessGame = new ChessGame();
         GameData gameData1 = new GameData(8, null, null, "TestGame8", chessGame);
@@ -122,7 +122,7 @@ class UnitTests {
 
 
     @Test
-    void testGetGameList_Negative_EmptyList() {
+    void testGetGameListNegativeEmptyList() {
         // Act
         Collection<GameData> gameList = memoryGameDataAccess.getGameList();
 
@@ -131,7 +131,7 @@ class UnitTests {
     }
 
     @Test
-    void testClearGames_Negative_NoGamesToClear() {
+    void testClearGamesNegativeNoGamesToClear() {
         // Act
         memoryGameDataAccess.clearGames();
         Collection<GameData> gameList = memoryGameDataAccess.getGameList();

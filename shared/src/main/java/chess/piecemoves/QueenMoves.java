@@ -5,8 +5,8 @@ import chess.ChessPosition;
 
 public class QueenMoves extends PieceMovesFar {
 
-    public QueenMoves(ChessBoard GameBoard, ChessPosition StartPosition) {
-        super(GameBoard, StartPosition);
+    public QueenMoves(ChessBoard GameBoard, ChessPosition startPosition) {
+        super(GameBoard, startPosition);
         calculateMoves(GameBoard);
     }
 

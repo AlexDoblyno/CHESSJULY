@@ -4,8 +4,8 @@ import chess.ChessBoard;
 import chess.ChessPosition;
 
 public class BishopMoves extends PieceMovesFar {
-    public BishopMoves(ChessBoard GameBoard, ChessPosition StartPosition) {
-        super(GameBoard, StartPosition);
+    public BishopMoves(ChessBoard GameBoard, ChessPosition startPosition) {
+        super(GameBoard, startPosition);
         calculateMoves(GameBoard);
     }
 
