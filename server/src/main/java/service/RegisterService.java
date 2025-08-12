@@ -154,7 +154,7 @@ public class RegisterService {
     /**
      * 检查字符串是否为空或null
      *
-     * @param value 待检测字符串
+     * @param value 待检测字符串。
      * @return 如果为空或null则返回true
      */
     private boolean isBlank(String value) {
