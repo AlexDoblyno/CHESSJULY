@@ -37,13 +37,12 @@ public class PreloginUI extends BaseUI {
     private void register(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 4);
         String register = client.register(tokens[1], tokens[2], tokens[3]);
-        if(!register.contains("uccessfully"))
-            throw new UIStateException(this, register);
+        System.out.println(register);
 
         // Set welcome string
         System.out.println(setWelcomeString(tokens));
 
-        throw new UIStateException(new PostloginUI(client), register);
+        throw new UIStateException(new PostloginUI(client), "\n");
     }
 
     private static String setWelcomeString(String[] tokens) {
@@ -51,7 +50,7 @@ public class PreloginUI extends BaseUI {
                 EscapeSequences.SET_TEXT_COLOR_BLACK + "Welcome, player " + tokens[1] +
                 "!\n" + EscapeSequences.RESET_TEXT_BOLD_FAINT + EscapeSequences.SET_TEXT_COLOR_DARK_GREY +
                 "Create or join a game! Type 'help' to see a list of commands." + EscapeSequences.RESET_BG_COLOR +
-                EscapeSequences.RESET_TEXT_COLOR + '\n';
+                EscapeSequences.RESET_TEXT_COLOR;
         return welcome;
     }
 
@@ -65,17 +64,11 @@ public class PreloginUI extends BaseUI {
      */
     private void login(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 3);
-        String login = null;
-        try {
-            login = client.login(tokens[1], tokens[2]);
-        }catch (ResponseException e){
-            throw new UIStateException(this, login);
-        }
-
+        String login = client.login(tokens[1], tokens[2]);
 
         System.out.println(login);
         System.out.println(setWelcomeString(tokens));
-        throw new UIStateException(new PostloginUI(client), login);
+        throw new UIStateException(new PostloginUI(client), "\n");
     }
 
     @Override

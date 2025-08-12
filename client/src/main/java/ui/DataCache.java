@@ -46,6 +46,15 @@ public class DataCache {
         return gameCache.get(index - 1);
     }
 
+    public GameData getGameByID(int gameID) {
+        for (GameData game : gameCache) {
+            if (game.gameID() == gameID) {
+                return game;
+            }
+        }
+        return null;
+    }
+
     public void setGameCache(Collection<GameData> gameCache) {
         this.gameCache = new ArrayList<GameData>(gameCache);
     }

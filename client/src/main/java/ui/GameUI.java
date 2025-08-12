@@ -46,7 +46,12 @@ public class GameUI extends BaseUI {
             case "highlight"->highlightLegalMoves();
             case "move" -> makeMove();
             case "leave" -> leaveGame();
-            default -> displayHelpInfo();
+            case "help" -> {
+                return displayHelpInfo();
+            }
+            default -> {
+                return displayHelpInfo();
+            }
         };
         return null;
     }
@@ -56,7 +61,7 @@ public class GameUI extends BaseUI {
         String gameName = client.getDataCache().getGameByIndex(gameID).gameName();
 
         client.getDataCache().setCurrentGameID(0);
-        String returnStatement = "Left game " + gameName + "successfully.";
+        String returnStatement = "Left game " + gameName + "successfully.\n";
         client.logout();
         throw new UIStateException(new PostloginUI(client), returnStatement);
     }
@@ -81,6 +86,9 @@ public class GameUI extends BaseUI {
         return """
     --- GAME COMMANDS ---
     Type a command to get the corresponding action.
+    - highlight | Highlight legal moves.
+    = move      | Make a move.
+    = leave     | Leave the current game.
     - quit      | Leave your current game.
     - help      | Display this help menu.
     """;

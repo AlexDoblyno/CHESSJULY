@@ -44,7 +44,7 @@ public class ChessClient {
     public String login(String... parameters) throws ResponseException {
         AuthTokenData authTokenData = server.loginUser(parameters[0], parameters[1]);
         dataCache.setAuthToken(authTokenData.authToken());
-        return parameters[1] + " has been successfully logged in!";
+        return parameters[0] + " has been successfully logged in!";
     }
 
     public String listGames() throws ResponseException {
@@ -92,15 +92,18 @@ public class ChessClient {
         //需要添加input错误后的报错内容
         server.joinGame(dataCache.getAuthToken(), teamColor, gameData.gameID());
 
+        gameList = server.listGame(dataCache.getAuthToken());
+        dataCache.setGameCache(gameList);
+        gameData = dataCache.getGameByID(gameData.gameID());
+
         // Set the gameboard drawer
         drawBoard.setChessGame(gameData.game());
         drawBoard.setPerspective(teamColor);
 
         StringBuilder resultString = new StringBuilder(drawBoard.drawBoardString(null));
-        resultString.append(String.format("Game - %s\nWhite - %s%s%s\nBlack - %s%s%s",
-                EscapeSequences.SET_TEXT_COLOR_BLUE, gameData.gameName(), EscapeSequences.RESET_TEXT_COLOR,
-                EscapeSequences.SET_TEXT_COLOR_WHITE, gameData.whiteUsername(), EscapeSequences.RESET_TEXT_COLOR,
-                EscapeSequences.SET_BG_COLOR_DARK_GREY, gameData.blackUsername(), EscapeSequences.RESET_TEXT_COLOR));
+        resultString.append(EscapeSequences.SET_TEXT_COLOR_BLUE).append("Game - ").append(gameData.gameName()).append(EscapeSequences.RESET_TEXT_COLOR)
+                .append("\n").append(EscapeSequences.SET_TEXT_COLOR_WHITE).append("White - ").append(gameData.whiteUsername()).append(EscapeSequences.RESET_TEXT_COLOR)
+                .append("\n").append(EscapeSequences.SET_BG_COLOR_DARK_GREY).append("Black -").append(gameData.blackUsername()).append(EscapeSequences.RESET_TEXT_COLOR).append("\n");
         return resultString.toString();
     }
 
