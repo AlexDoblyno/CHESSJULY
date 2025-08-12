@@ -75,11 +75,16 @@ public class ChessClient {
     // parameters only need to be a game name. AuthToken is stored in the DataCache.
     public String createGame(String... parameters) throws ResponseException {
 
-        int gameID = server.createGame(dataCache.getAuthToken(), parameters[0]);
+        int gameID = server.createGame(dataCache.getAuthToken(), parameters[1]);
+
+        Collection<GameData> gameList = server.listGame(dataCache.getAuthToken());
+        dataCache.setGameCache(gameList);
+
+        GameData gameData = dataCache.getGameByID(gameID);
 
         // Create string display result using StringBuilder
         StringBuilder resultString = new StringBuilder();
-        return "Successful game creation with ID " + gameID;
+        return "Successful game creation with ID " + gameID + " With index of " + dataCache.getGameIndexByID(gameID);
     }
 
     // parameters[1] is the team color, and parameters[2] is the gameID

@@ -41,7 +41,8 @@ public class PostloginUI extends BaseUI {
     private String create(String[] tokens) throws ResponseException {
         validateParameterLength(tokens, 2);
         String gameName = tokens[1];
-        return client.createGame(gameName);
+        String result = client.createGame(client.getDataCache().getAuthToken(), gameName);
+        return result;
     }
 
     private void join(String[] tokens) throws ResponseException {
